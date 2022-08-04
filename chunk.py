@@ -1,0 +1,62 @@
+from enum import IntEnum
+from valuearray import *
+
+class OpCode(IntEnum):
+	OP_CONSTANT = 1
+	OP_RETURN = 2
+
+
+class Chunk:
+	def __init__(self):
+		self.code = []
+		self.lines = []
+		self.constants = ValueArray()
+
+	def writeChunk(self, b, line):
+		self.code.append(b)
+		self.lines.append(line)
+
+	def freeChunk(self):
+		self.code.clear()
+		self.lines.clear()
+		self.constants.clear()
+
+	def addConstant(self, value):
+		self.constants.writeValueArray(value)
+		return self.constants.len() - 1
+		
+	def disassembleChunk(self, name):
+		print("===", name, "===")
+		offset = 0;
+		while offset < len(self.code):
+			offset = self.disassembleInstruction(offset)
+
+	def disassembleInstruction(self, offset):
+		print('{0:04d} '.format(offset), end='')
+		if offset > 0 and self.lines[offset] == self.lines[offset - 1]:
+			print('   | ', end='')
+		else:
+			print('{0:4d} '.format(self.lines[offset]), end='')
+		op = self.code[offset]
+		if op == OpCode.OP_CONSTANT:
+				return self.constantInstruction("OP_CONSTANT", offset)
+
+		if op == OpCode.OP_RETURN:
+				return self.simpleInstruction("OP_RETURN", offset)
+
+		print("Unknown opcode {0}".format(self.code[offset]))
+		return offset + 1
+
+	def constantInstruction(self, name, offset):
+		constant = self.code[offset + 1]
+		print("{0:<16} {1:4d} '".format(name, constant), end='')
+		self.printValue(self.constants[constant])
+		print("'")
+		return offset + 2
+
+	def printValue(self, value):
+		print('{0:g}'.format(value), end='')
+
+	def simpleInstruction(self, name, offset):
+		print(name)
+		return offset + 1
