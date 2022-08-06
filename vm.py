@@ -2,15 +2,18 @@ from enum import IntEnum
 from chunk import *
 
 class InterpretResult(IntEnum):
+	"""Possible results of interpreting chunk of bytecode"""
 	INTERPRET_OK = 1
 	INTERPRET_COMPILE_ERROR = 2
 	INTERPRET_RUNTIME_ERROR = 3
 
 class VM:
+	"""A virtual machine for executing chunks of bytecode"""
 	def __init__(self):
 		self.initVm()
 
 	def initVm(self):
+		"""Setup empty virtual machine"""
 		self.chunk = Chunk()
 		self.ip = 0
 		self.resetStack()
@@ -20,9 +23,11 @@ class VM:
 		self.stack = []
 
 	def freeVm(self):
+		"""Free memory used by virtual machine"""
 		return
 
 	def interpret(self, chunk):
+		"""Interpret chunk of bytecode"""
 		self.chunk = chunk
 		self.ip = 0
 		return self.run()

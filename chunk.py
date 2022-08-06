@@ -2,6 +2,7 @@ from enum import IntEnum
 from valuearray import *
 
 class OpCode(IntEnum):
+	"""Instruction opcodes"""
 	OP_CONSTANT = 1
 	OP_ADD = 2
 	OP_SUBTRACT  = 3
@@ -12,25 +13,31 @@ class OpCode(IntEnum):
 
 
 class Chunk:
+	"""A chunk of bytecode that was compiled and is executed by VM"""
+
 	def __init__(self):
 		self.code = []
 		self.lines = []
 		self.constants = ValueArray()
 
 	def writeChunk(self, b, line):
+		"""Add a single byte to chunk"""
 		self.code.append(b)
 		self.lines.append(line)
 
 	def freeChunk(self):
+		"""Throw away memory used by chunk"""
 		self.code.clear()
 		self.lines.clear()
 		self.constants.clear()
 
 	def addConstant(self, value):
+		"""Add a constant value to the chunk"""
 		self.constants.writeValueArray(value)
 		return self.constants.len() - 1
 		
 	def disassembleChunk(self, name):
+		"""Print human readable representation of chunk"""
 		print("===", name, "===")
 		offset = 0;
 		while offset < len(self.code):
