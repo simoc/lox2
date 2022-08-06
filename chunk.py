@@ -3,7 +3,12 @@ from valuearray import *
 
 class OpCode(IntEnum):
 	OP_CONSTANT = 1
-	OP_RETURN = 2
+	OP_ADD = 2
+	OP_SUBTRACT  = 3
+	OP_MULTIPLY = 4
+	OP_DIVIDE = 5
+	OP_NEGATE = 6
+	OP_RETURN = 7
 
 
 class Chunk:
@@ -40,6 +45,21 @@ class Chunk:
 		op = self.code[offset]
 		if op == OpCode.OP_CONSTANT:
 				return self.constantInstruction("OP_CONSTANT", offset)
+
+		if op == OpCode.OP_ADD:
+				return self.simpleInstruction("OP_ADD", offset)
+
+		if op == OpCode.OP_SUBTRACT:
+				return self.simpleInstruction("OP_SUBTRACT", offset)
+
+		if op == OpCode.OP_MULTIPLY:
+				return self.simpleInstruction("OP_MULTIPLY", offset)
+
+		if op == OpCode.OP_DIVIDE:
+				return self.simpleInstruction("OP_DIVIDE", offset)
+
+		if op == OpCode.OP_NEGATE:
+				return self.simpleInstruction("OP_NEGATE", offset)
 
 		if op == OpCode.OP_RETURN:
 				return self.simpleInstruction("OP_RETURN", offset)
