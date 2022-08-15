@@ -1,26 +1,43 @@
-from chunk import *
 from vm import *
+import sys
 
 vm = VM()
 vm.initVm()
 
-c = Chunk()
-constant = c.addConstant(1.2)
-c.writeChunk(OpCode.OP_CONSTANT, 123)
-c.writeChunk(constant, 123)
+def repl():
+	print("> ", end='', flush=True)
+	for line in sys.stdin:
+		vm.interpret(line)
+		print("> ", end='', flush=True)
 
-constant = c.addConstant(3.4)
-c.writeChunk(OpCode.OP_CONSTANT, 123)
-c.writeChunk(constant, 123)
+def readFile(path):
+	try:
+		f = open(path, "r")
+		all_lines = f.readlines()
+		buffer = ""
+		for line in all_lines:
+			buffer += line
+		f.close()
+		return buffer
+	except IOError as e:
+		print("Could not open file: {}".format(path), file=sys.stderr)
+		exit(74)
 
-c.writeChunk(OpCode.OP_ADD, 123)
+def runFile(path):
+	source = readFile(path)
+	result = vm.interpret(source)
+	if (result == InterpretResult.INTERPRET_COMPILE_ERROR):
+		return(65)
+	if (result == InterpretResult.INTERPRET_RUNTIME_ERROR):
+		return(70)
 
-constant = c.addConstant(5.6)
-c.writeChunk(OpCode.OP_CONSTANT, 123)
-c.writeChunk(constant, 123)
+if len(sys.argv) == 1:
+	repl()
+elif len(sys.argv) == 2:
+	runFile(sys.argv[1])
+else:
+	print("Usage: clox [path]", file=sys.stderr)
+	exit(64)
 
-c.writeChunk(OpCode.OP_DIVIDE, 123)
+exit(0)
 
-c.writeChunk(OpCode.OP_RETURN, 123)
-c.disassembleChunk("test chunk")
-vm.interpret(c)

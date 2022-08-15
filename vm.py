@@ -1,5 +1,6 @@
 from enum import IntEnum
 from chunk import *
+from compiler import *
 
 class InterpretResult(IntEnum):
 	"""Possible results of interpreting chunk of bytecode"""
@@ -26,11 +27,11 @@ class VM:
 		"""Free memory used by virtual machine"""
 		return
 
-	def interpret(self, chunk):
-		"""Interpret chunk of bytecode"""
-		self.chunk = chunk
-		self.ip = 0
-		return self.run()
+	def interpret(self, source):
+		"""Interpret lox source code"""
+		c = Compiler()
+		c.compile(source)
+		return InterpretResult.INTERPRET_OK
 
 	def run(self):
 		while True:
