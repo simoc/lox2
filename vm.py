@@ -29,9 +29,17 @@ class VM:
 
 	def interpret(self, source):
 		"""Interpret lox source code"""
+		chunk = Chunk()
 		c = Compiler()
-		c.compile(source)
-		return InterpretResult.INTERPRET_OK
+		if c.compile(source, chunk) == False:
+			return InterpretResult.INTERPRET_COMPILE_ERROR
+
+		self.chunk = chunk
+		self.ip = 0
+		result = self.run()
+		self.chunk.freeChunk()
+
+		return result
 
 	def run(self):
 		while True:

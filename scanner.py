@@ -8,7 +8,8 @@ class Scanner:
 		self.line = 1;
 
 	def isAtEnd(self):
-		return self.currentIndex >= len(self.start)
+		flag = self.currentIndex >= len(self.start)
+		return flag
 
 	def makeToken(self, type):
 		token = Token()
@@ -58,6 +59,9 @@ class Scanner:
 		return self.start[self.currentIndex + 1]
 
 	def skipWhitespace(self):
+		if self.isAtEnd():
+			return
+
 		while True:
 			c = self.peek()
 			if c == ' ' or c == '\r' or c == '\t':
@@ -68,7 +72,7 @@ class Scanner:
 			if c == '/':
 				if self.peekNext() == '/':
 					# A comment goes until the end of the line.
-					while self.peek() != '\n' and not isAtEnd():
+					while self.peek() != '\n' and not self.isAtEnd():
 						self.advance()
 				else:
 					return
@@ -186,22 +190,22 @@ class Scanner:
 		if c == '*':
 			return self.makeToken(TokenType.TOKEN_STAR)
 		if c == '!':
-			if match('='):
+			if self.match('='):
 				return self.makeToken(TokenType.TOKEN_BANG_EQUAL)
 			else:
 				return self.makeToken(TokenType.TOKEN_BANG)
 		if c == '=':
-			if match('='):
+			if self.match('='):
 				return self.makeToken(TokenType.TOKEN_EQUAL_EQUAL)
 			else:
 				return self.makeToken(TokenType.TOKEN_EQUAL)
 		if c == '<':
-			if match('='):
+			if self.match('='):
 				return self.makeToken(TokenType.TOKEN_LESS_EQUAL)
 			else:
 				return self.makeToken(TokenType.TOKEN_LESS)
 		if c == '>':
-			if match('='):
+			if self.match('='):
 				return self.makeToken(TokenType.TOKEN_GREATER_EQUAL)
 			else:
 				return self.makeToken(TokenType.TOKEN_GREATER)
