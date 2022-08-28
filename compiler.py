@@ -2,6 +2,7 @@ from scanner import *
 from token import *
 from chunk import *
 from value import *
+from object import *
 import sys
 
 DEBUG_PRINT_CODE = 1
@@ -165,6 +166,12 @@ class Compiler:
 		value = float(self.parser.previous.start)
 		self.emitConstant(Value.NUMBER_VAL(value))
 
+	def string(self):
+		# Take string inside quotes
+		s = self.parser.previous.start[1 : -1]
+		obj = ObjString(s)
+		self.emitConstant(Value.OBJ_VAL(obj))
+
 	def unary(self):
 		operatorType = self.parser.previous.type
 
@@ -202,7 +209,7 @@ class Compiler:
 			TokenType.TOKEN_LESS:           ParseRule(None,     self.binary,   Precedence.PREC_COMPARISON),
 			TokenType.TOKEN_LESS_EQUAL:     ParseRule(None,     self.binary,   Precedence.PREC_COMPARISON),
 			TokenType.TOKEN_IDENTIFIER:     ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_STRING:         ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_STRING:         ParseRule(self.string,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_NUMBER:         ParseRule(self.number,   None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_AND:            ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_CLASS:          ParseRule(None,     None,   Precedence.PREC_NONE),

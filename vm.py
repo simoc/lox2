@@ -49,8 +49,12 @@ class VM:
 
 		return result
 
-	def checkBinaryOperands(self):
+	def checkNumberBinaryOperands(self):
 		return self.peek(0).IS_NUMBER() and self.peek(1).IS_NUMBER()
+
+	def checkStringBinaryOperands(self):
+		if self.peek(0).IS_OBJ() and self.peek(1).IS_OBJ():
+			return self.peek(0).AS_OBJ().IS_STRING() and self.peek(1).AS_OBJ().IS_STRING()
 
 	def run(self):
 		while True:
@@ -85,7 +89,7 @@ class VM:
 				self.push(Value.BOOL_VAL(eq))
 
 			if instruction == OpCode.OP_GREATER:
-				if not self.checkBinaryOperands():
+				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				b = self.pop().AS_NUMBER()
@@ -93,24 +97,26 @@ class VM:
 				self.push(Value.BOOL_VAL(a > b))
 
 			if instruction == OpCode.OP_LESS:
-				if not self.checkBinaryOperands():
+				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				b = self.pop().AS_NUMBER()
 				a = self.pop().AS_NUMBER()
 				self.push(Value.BOOL_VAL(a < b))
 
-
 			if instruction == OpCode.OP_ADD:
-				if not self.checkBinaryOperands():
+				if self.checkStringBinaryOperands():
+					self.concatenate()
+				elif self.checkNumberBinaryOperands():
+					b = self.pop().AS_NUMBER()
+					a = self.pop().AS_NUMBER()
+					self.push(Value.NUMBER_VAL(a + b))
+				else:
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
-				b = self.pop().AS_NUMBER()
-				a = self.pop().AS_NUMBER()
-				self.push(Value.NUMBER_VAL(a + b))
 
 			if instruction == OpCode.OP_SUBTRACT:
-				if not self.checkBinaryOperands():
+				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				b = self.pop().AS_NUMBER()
@@ -118,7 +124,7 @@ class VM:
 				self.push(Value.NUMBER_VAL(a - b))
 
 			if instruction == OpCode.OP_MULTIPLY:
-				if not self.checkBinaryOperands():
+				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				b = self.pop().AS_NUMBER()
@@ -126,7 +132,7 @@ class VM:
 				self.push(Value.NUMBER_VAL(a * b))
 
 			if instruction == OpCode.OP_DIVIDE:
-				if not self.checkBinaryOperands():
+				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				b = self.pop().AS_NUMBER()
@@ -163,7 +169,8 @@ class VM:
 		return self.stack.pop()
 
 	def peek(self, distance):
-		return self.stack[-1:][0]
+		"""Peek value that is distance elements from top of stack without modifying stack"""
+		return self.stack[len(self.stack) - 1 - distance]
 
 	def isFalsey(self, value):
 		if value.IS_NIL():
@@ -171,3 +178,9 @@ class VM:
 		if value.IS_BOOL():
 			return value.AS_BOOL() == False
 		return False
+
+	def concatenate(self):
+		b = self.pop().AS_OBJ().AS_STRING()
+		a = self.pop().AS_OBJ().AS_STRING()
+		s = ObjString(a + b)
+		self.push(Value.OBJ_VAL(s))

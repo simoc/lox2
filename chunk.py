@@ -123,6 +123,9 @@ class Chunk:
 		if value.type == ValueType.VAL_NUMBER:
 			print('{0:g}'.format(value.AS_NUMBER()), end='')
 
+		if value.type == ValueType.VAL_OBJ:
+			value.AS_OBJ().printObject()
+
 	def simpleInstruction(self, name, offset):
 		print(name)
 		return offset + 1
