@@ -8,19 +8,21 @@ names and logic.
 ## Usage
 
 ```
-C:\Git_Repos\lox2>type chapter17.lox
-(-1 + 2) * 3 - -4
+C:\Git_Repos\lox2>type chapter18.lox
+!(5 - 4 > 3 * 2 == !nil)
 
-C:\Git_Repos\lox2>python main.py chapter17.lox
+C:\Git_Repos\lox2>python main.py chapter18.lox
 === code ===
-0000    1 OP_CONSTANT         0 '1'
-0002    | OP_NEGATE
-0003    | OP_CONSTANT         1 '2'
-0005    | OP_ADD
-0006    | OP_CONSTANT         2 '3'
-0008    | OP_MULTIPLY
-0009    | OP_CONSTANT         3 '4'
-0011    | OP_NEGATE
-0012    | OP_SUBTRACT
-7
+0000    1 OP_CONSTANT         0 '5'
+0002    | OP_CONSTANT         1 '4'
+0004    | OP_SUBTRACT
+0005    | OP_CONSTANT         2 '3'
+0007    | OP_CONSTANT         3 '2'
+0009    | OP_MULTIPLY
+0010    | OP_GREATER
+0011    | OP_NIL
+0012    | OP_NOT
+0013    | OP_EQUAL
+0014    | OP_NOT
+true
 ```
