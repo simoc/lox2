@@ -1,6 +1,7 @@
 from scanner import *
 from token import *
 from chunk import *
+from value import *
 import sys
 
 DEBUG_PRINT_CODE = 1
@@ -123,7 +124,19 @@ class Compiler:
 		rule = self.getRule(operatorType)
 		self.parsePrecedence(rule.precedence + 1)
 
-		if operatorType == TokenType.TOKEN_PLUS:
+		if operatorType == TokenType.TOKEN_BANG_EQUAL:
+			self.emitBytes(OpCode.OP_EQUAL, OpCode.OP_NOT)
+		elif operatorType == TokenType.TOKEN_EQUAL_EQUAL:
+			self.emitByte(OpCode.OP_EQUAL)
+		elif operatorType == TokenType.TOKEN_GREATER:
+			self.emitByte(OpCode.OP_GREATER)
+		elif operatorType == TokenType.TOKEN_GREATER_EQUAL:
+			self.emitBytes(OpCode.OP_LESS, OpCode.OP_NOT)
+		elif operatorType == TokenType.TOKEN_LESS:
+			self.emitByte(OpCode.OP_LESS)
+		elif operatorType == TokenType.TOKEN_LESS_EQUAL:
+			self.emitBytes(OpCode.OP_GREATER, OpCode.OP_NOT)
+		elif operatorType == TokenType.TOKEN_PLUS:
 			self.emitByte(OpCode.OP_ADD)
 		elif operatorType == TokenType.TOKEN_MINUS:
 			self.emitByte(OpCode.OP_SUBTRACT)
@@ -135,13 +148,22 @@ class Compiler:
 			# Unreachable
 			return
 
+	def literal(self):
+		operatorType = self.parser.previous.type
+		if operatorType == TokenType.TOKEN_FALSE:
+			self.emitByte(OpCode.OP_FALSE)
+		if operatorType == TokenType.TOKEN_NIL:
+			self.emitByte(OpCode.OP_NIL)
+		if operatorType == TokenType.TOKEN_TRUE:
+			self.emitByte(OpCode.OP_TRUE)
+
 	def grouping(self):
 		self.expression()
 		self.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after expression.")
 
 	def number(self):
 		value = float(self.parser.previous.start)
-		self.emitConstant(value)
+		self.emitConstant(Value.NUMBER_VAL(value))
 
 	def unary(self):
 		operatorType = self.parser.previous.type
@@ -150,6 +172,8 @@ class Compiler:
 		self.parsePrecedence(Precedence.PREC_UNARY)
 
 		# Emit the operator instruction.
+		if operatorType == TokenType.TOKEN_BANG:
+			self.emitByte(OpCode.OP_NOT)
 		if operatorType == TokenType.TOKEN_MINUS:
 			self.emitByte(OpCode.OP_NEGATE)
 
@@ -169,31 +193,31 @@ class Compiler:
 			TokenType.TOKEN_SEMICOLON:      ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_SLASH:          ParseRule(None,     self.binary, Precedence.PREC_FACTOR),
 			TokenType.TOKEN_STAR:           ParseRule(None,     self.binary, Precedence.PREC_FACTOR),
-			TokenType.TOKEN_BANG:           ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_BANG_EQUAL:     ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_BANG:           ParseRule(self.unary,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_BANG_EQUAL:     ParseRule(None,     self.binary,   Precedence.PREC_EQUALITY),
 			TokenType.TOKEN_EQUAL:          ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_EQUAL_EQUAL:    ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_GREATER:        ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_GREATER_EQUAL:  ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_LESS:           ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_LESS_EQUAL:     ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_EQUAL_EQUAL:    ParseRule(None,     self.binary,   Precedence.PREC_EQUALITY),
+			TokenType.TOKEN_GREATER:        ParseRule(None,     self.binary,   Precedence.PREC_COMPARISON),
+			TokenType.TOKEN_GREATER_EQUAL:  ParseRule(None,     self.binary,   Precedence.PREC_COMPARISON),
+			TokenType.TOKEN_LESS:           ParseRule(None,     self.binary,   Precedence.PREC_COMPARISON),
+			TokenType.TOKEN_LESS_EQUAL:     ParseRule(None,     self.binary,   Precedence.PREC_COMPARISON),
 			TokenType.TOKEN_IDENTIFIER:     ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_STRING:         ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_NUMBER:         ParseRule(self.number,   None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_AND:            ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_CLASS:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_ELSE:           ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_FALSE:          ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_FALSE:          ParseRule(self.literal,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_FOR:            ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_FUN:            ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_IF:             ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_NIL:            ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_NIL:            ParseRule(self.literal,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_OR:             ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_PRINT:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_RETURN:         ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_SUPER:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_THIS:           ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_TRUE:           ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_TRUE:           ParseRule(self.literal,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_VAR:            ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_WHILE:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_ERROR:          ParseRule(None,     None,   Precedence.PREC_NONE),

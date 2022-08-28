@@ -103,7 +103,7 @@ class Scanner:
 		if c == 'e':
 			return self.checkKeyword(1, 3, "lse", TokenType.TOKEN_ELSE)
 		if c == 'f':
-			c2 = self.start[self.currentIndex + 1]
+			c2 = self.start[self.startIndex + 1]
 			if c2 == 'a':
 				return self.checkKeyword(2, 3, "lse", TokenType.TOKEN_FALSE)
 			if c2 == 'o':
@@ -123,11 +123,11 @@ class Scanner:
 		if c == 's':
 			return self.checkKeyword(1, 4, "uper", TokenType.TOKEN_SUPER)
 		if c == 't':
-			c2 = self.start[self.currentIndex + 1]
+			c2 = self.start[self.startIndex + 1]
 			if c2 == 'h':
 				return self.checkKeyword(2, 2, "is", TokenType.TOKEN_THIS)
 			if c2 == 'r':
-				return self.checkKeyword(2, 2, "ue", TokenType.TOKEN_THIS)
+				return self.checkKeyword(2, 2, "ue", TokenType.TOKEN_TRUE)
 		if c == 'v':
 			return self.checkKeyword(1, 3, "ar", TokenType.TOKEN_VAR)
 		if c == 'w':
