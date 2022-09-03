@@ -7,12 +7,6 @@ class ObjType(IntEnum):
 class Obj:
 	def __init__(self):
 		self.type = ObjType.OBJ_STRING
-		#self.value = Value()
-
-	#def __init__(self, obj):
-		#self.type = ObjType.OBJ_STRING
-		#print("obj=", obj)
-		#self.value = Value.OBJ_VAL(obj)
 
 	def OBJ_TYPE(self):
 		return self.type
@@ -27,9 +21,6 @@ class ObjString(Obj):
 		super().__init__()
 		self.length = len(str)
 		self.chars = str
-
-	#def isObjType(self, value, type):
-		#return value.IS_OBJ() and value.AS_OBJ().type == type
 
 	def IS_STRING(self):
 		return self.OBJ_TYPE() == ObjType.OBJ_STRING
