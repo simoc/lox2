@@ -111,19 +111,19 @@ class Chunk:
 		return offset + 2
 
 	def printValue(self, value):
-		if value.type == ValueType.VAL_BOOL:
+		if value.IS_BOOL():
 			if value.AS_BOOL() == True:
 				print('true', end='')
 			else:
 				print('false', end='')
 
-		if value.type == ValueType.VAL_NIL:
+		if value.IS_NIL():
 			print('nil', end='')
 
-		if value.type == ValueType.VAL_NUMBER:
+		if value.IS_NUMBER():
 			print('{0:g}'.format(value.AS_NUMBER()), end='')
 
-		if value.type == ValueType.VAL_OBJ:
+		if value.IS_OBJ():
 			value.AS_OBJ().printObject()
 
 	def simpleInstruction(self, name, offset):
