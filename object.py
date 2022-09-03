@@ -14,22 +14,22 @@ class Obj:
 class ObjString(Obj):
 	def __init__(self):
 		super().__init__()
-		self._length = 0
-		self._chars = ""
+		self.__length = 0
+		self.__chars = ""
 
 	def __init__(self, str):
 		super().__init__()
-		self._length = len(str)
-		self._chars = str
+		self.__length = len(str)
+		self.__chars = str
 
 	def IS_STRING(self):
 		return self.OBJ_TYPE() == ObjType.OBJ_STRING
 
 	def AS_CSTRING(self):
-		return self._chars
+		return self.__chars
 
 	def AS_STRING(self):
-		return self._chars
+		return self.__chars
 
 	def printObject(self):
 		if self.OBJ_TYPE() == ObjType.OBJ_STRING:
