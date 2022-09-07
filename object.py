@@ -20,6 +20,12 @@ class ObjString(Obj):
 		super().__init__()
 		self.__chars = str
 
+	def __eq__(self, other):
+		return self.type == other.type and self.__chars == other.__chars
+
+	def __hash__(self):
+		return hash(self.__chars)
+
 	def IS_STRING(self):
 		return self.OBJ_TYPE() == ObjType.OBJ_STRING
 
