@@ -14,12 +14,10 @@ class Obj:
 class ObjString(Obj):
 	def __init__(self):
 		super().__init__()
-		self.__length = 0
 		self.__chars = ""
 
 	def __init__(self, str):
 		super().__init__()
-		self.__length = len(str)
 		self.__chars = str
 
 	def IS_STRING(self):
