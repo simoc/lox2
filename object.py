@@ -6,10 +6,10 @@ class ObjType(IntEnum):
 
 class Obj:
 	def __init__(self):
-		self.type = ObjType.OBJ_STRING
+		self.__type = ObjType.OBJ_STRING
 
 	def OBJ_TYPE(self):
-		return self.type
+		return self.__type
 
 class ObjString(Obj):
 	def __init__(self):
@@ -21,7 +21,7 @@ class ObjString(Obj):
 		self.__chars = str
 
 	def __eq__(self, other):
-		return self.type == other.type and self.__chars == other.__chars
+		return self.__type == other.__type and self.__chars == other.__chars
 
 	def __hash__(self):
 		return hash(self.__chars)
