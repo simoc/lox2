@@ -17,7 +17,8 @@ class OpCode(IntEnum):
 	OP_DIVIDE = 11
 	OP_NOT = 12
 	OP_NEGATE = 13
-	OP_RETURN = 14
+	OP_PRINT = 14
+	OP_RETURN = 15
 
 
 class Chunk:
@@ -96,6 +97,9 @@ class Chunk:
 
 		if op == OpCode.OP_NEGATE:
 				return self.simpleInstruction("OP_NEGATE", offset)
+
+		if op == OpCode.OP_PRINT:
+				return self.simpleInstruction("OP_PRINT", offset)
 
 		if op == OpCode.OP_RETURN:
 				return self.simpleInstruction("OP_RETURN", offset)

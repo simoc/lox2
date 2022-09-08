@@ -91,6 +91,15 @@ class Compiler:
 			return
 		self.errorAtCurrent(message)
 
+	def check(self, type):
+		return self.parser.current.type == type
+
+	def match(self, type):
+		if not self.check(type):
+			return False
+		self.advance()
+		return True
+
 	def currentChunk(self):
 		return self.compilingChunk
 
@@ -248,6 +257,18 @@ class Compiler:
 	def expression(self):
 		self.parsePrecedence(Precedence.PREC_ASSIGNMENT)
 
+	def printStatement(self):
+		self.expression()
+		self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after value.")
+		self.emitByte(OpCode.OP_PRINT)
+
+	def declaration(self):
+		self.statement()
+
+	def statement(self):
+		if self.match(TokenType.TOKEN_PRINT):
+			self.printStatement()
+
 	def compile(self, source, chunk):
 		self.scanner = Scanner()
 		self.scanner.initScanner(source)
@@ -257,8 +278,10 @@ class Compiler:
 		self.parser.panicMode = False
 
 		self.advance()
-		self.expression()
-		self.consume(TokenType.TOKEN_EOF, "Expect end of expression.")
+
+		while not self.match(TokenType.TOKEN_EOF):
+			self.declaration()
+
 		self.endCompiler()
 		return not self.parser.hadError
 

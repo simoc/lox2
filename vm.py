@@ -149,9 +149,14 @@ class VM:
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				n = self.pop().AS_NUMBER()
 				self.push(Value.NUMBER_VAL(-n))
-			if instruction == OpCode.OP_RETURN:
+
+			if instruction == OpCode.OP_PRINT:
 				self.chunk.printValue(self.pop())
-				return
+				print()
+
+			if instruction == OpCode.OP_RETURN:
+				# Exit interpreter.
+				return InterpretResult.INTERPRET_OK
 
 	def readByte(self):
 		b = self.chunk.code[self.ip]
