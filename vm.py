@@ -2,6 +2,7 @@ from enum import IntEnum
 from chunk import *
 from compiler import *
 from value import *
+from table import *
 
 class InterpretResult(IntEnum):
 	"""Possible results of interpreting chunk of bytecode"""
@@ -20,6 +21,7 @@ class VM:
 		self.ip = 0
 		self.resetStack()
 		self.debugTraceExecution = 0
+		self.globals = Table()
 
 	def resetStack(self):
 		self.stack = []
@@ -81,6 +83,32 @@ class VM:
 
 			if instruction == OpCode.OP_FALSE:
 				self.push(Value.BOOL_VAL(False))
+
+			if instruction == OpCode.OP_POP:
+				self.pop()
+
+			if instruction == OpCode.OP_GET_GLOBAL:
+				constant = self.readConstant()
+				name = constant.AS_OBJ()
+				value = self.globals.get(name)
+				if value == None:
+					self.runtimeError("Undefined variable '{0}'".format(name.AS_STRING()))
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+				self.push(value)
+
+			if instruction == OpCode.OP_DEFINE_GLOBAL:
+				constant = self.readConstant()
+				name = constant.AS_OBJ()
+				self.globals.set(name, self.peek(0))
+				self.pop()
+
+			if instruction == OpCode.OP_SET_GLOBAL:
+				constant = self.readConstant()
+				name = constant.AS_OBJ()
+				if self.globals.set(name, self.peek(0)):
+					self.globals.delete(name)
+					self.runtimeError("Undefined variable '{0}'".format(name.AS_STRING()))
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
 
 			if instruction == OpCode.OP_EQUAL:
 				b = self.pop()
