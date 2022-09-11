@@ -21,7 +21,9 @@ class ObjString(Obj):
 		self.__chars = str
 
 	def __eq__(self, other):
-		return self.__type == other.__type and self.__chars == other.__chars
+		if isinstance(other, ObjString):
+			return self.__chars == other.__chars
+		return False
 
 	def __hash__(self):
 		return hash(self.__chars)
