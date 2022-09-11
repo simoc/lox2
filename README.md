@@ -5,36 +5,47 @@ Lox compiler and virtual machine from Chapters 14-30 of the http://www.craftingi
 This implementation is in Python instead of C, but uses the same function
 names and logic.
 
+Currently, Chapters 14-21 are implemented.
+
 ## Usage
 
 ```
-C:\Git_Repos\lox2>type chapter18.lox
-!(5 - 4 > 3 * 2 == !nil)
+C:\Git_Repos\lox2>type chapter21.1.lox
+print 1 + 2;
+print 3 * 4;
 
-C:\Git_Repos\lox2>python main.py chapter18.lox
+C:\Git_Repos\lox2>python main.py chapter21.1.lox
 === code ===
-0000    1 OP_CONSTANT         0 '5'
-0002    | OP_CONSTANT         1 '4'
-0004    | OP_SUBTRACT
-0005    | OP_CONSTANT         2 '3'
-0007    | OP_CONSTANT         3 '2'
-0009    | OP_MULTIPLY
-0010    | OP_GREATER
-0011    | OP_NIL
-0012    | OP_NOT
-0013    | OP_EQUAL
-0014    | OP_NOT
-true
-
-C:\Git_Repos\lox2>type chapter19.lox
-"st" + "ri" + "ng"
-
-C:\Git_Repos\lox2>python main.py chapter19.lox
-=== code ===
-0000    1 OP_CONSTANT         0 'st'
-0002    | OP_CONSTANT         1 'ri'
+0000    1 OP_CONSTANT         0 '1'
+0002    | OP_CONSTANT         1 '2'
 0004    | OP_ADD
-0005    | OP_CONSTANT         2 'ng'
-0007    | OP_ADD
-string
+0005    | OP_PRINT
+0006    2 OP_CONSTANT         2 '3'
+0008    | OP_CONSTANT         3 '4'
+0010    | OP_MULTIPLY
+0011    | OP_PRINT
+3
+12
+
+C:\Git_Repos\lox2>type chapter21.4.lox
+var breakfast = "beignets";
+var beverage = "cafe au lait";
+breakfast = "beignets with " + beverage;
+
+print breakfast;
+
+C:\Git_Repos\lox2>python main.py chapter21.4.lox
+=== code ===
+0000    1 OP_CONSTANT         1 'beignets'
+0002    | OP_DEFINE_GLOBAL    0 'breakfast'
+0004    2 OP_CONSTANT         3 'cafe au lait'
+0006    | OP_DEFINE_GLOBAL    2 'beverage'
+0008    3 OP_CONSTANT         5 'beignets with '
+0010    | OP_GET_GLOBAL       6 'beverage'
+0012    | OP_ADD
+0013    | OP_SET_GLOBAL       4 'breakfast'
+0015    | OP_POP
+0016    5 OP_GET_GLOBAL       7 'breakfast'
+0018    | OP_PRINT
+beignets with cafe au lait
 ```
