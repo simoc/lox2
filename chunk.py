@@ -8,17 +8,21 @@ class OpCode(IntEnum):
 	OP_NIL = 2
 	OP_TRUE = 3
 	OP_FALSE = 4
-	OP_EQUAL = 5
-	OP_GREATER = 6
-	OP_LESS = 7
-	OP_ADD = 8
-	OP_SUBTRACT  = 9
-	OP_MULTIPLY = 10
-	OP_DIVIDE = 11
-	OP_NOT = 12
-	OP_NEGATE = 13
-	OP_PRINT = 14
-	OP_RETURN = 15
+	OP_POP = 5
+	OP_GET_GLOBAL = 6
+	OP_DEFINE_GLOBAL = 7
+	OP_SET_GLOBAL = 8
+	OP_EQUAL = 9
+	OP_GREATER = 10
+	OP_LESS = 11
+	OP_ADD = 12
+	OP_SUBTRACT  = 13
+	OP_MULTIPLY = 14
+	OP_DIVIDE = 15
+	OP_NOT = 16
+	OP_NEGATE = 17
+	OP_PRINT = 18
+	OP_RETURN = 19
 
 
 class Chunk:
@@ -70,6 +74,18 @@ class Chunk:
 
 		if op == OpCode.OP_FALSE:
 				return self.simpleInstruction("OP_FALSE", offset)
+
+		if op == OpCode.OP_POP:
+				return self.simpleInstruction("OP_POP", offset)
+
+		if op == OpCode.OP_GET_GLOBAL:
+				return self.constantInstruction("OP_GET_GLOBAL", offset)
+
+		if op == OpCode.OP_DEFINE_GLOBAL:
+				return self.constantInstruction("OP_DEFINE_GLOBAL", offset)
+
+		if op == OpCode.OP_SET_GLOBAL:
+				return self.constantInstruction("OP_SET_GLOBAL", offset)
 
 		if op == OpCode.OP_EQUAL:
 				return self.simpleInstruction("OP_EQUAL", offset)
