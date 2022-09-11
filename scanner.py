@@ -212,4 +212,4 @@ class Scanner:
 		if c == '"':
 			return self.string()
 
-		return self.errorToken("Unexpected character.")
+		return self.errorToken("Unexpected character '{0}'.".format(c))
