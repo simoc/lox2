@@ -51,6 +51,8 @@ class Scanner:
 		return True
 
 	def peek(self):
+		if self.isAtEnd():
+			return '\0'
 		return self.start[self.currentIndex]
 
 	def peekNext(self):
@@ -66,10 +68,10 @@ class Scanner:
 			c = self.peek()
 			if c == ' ' or c == '\r' or c == '\t':
 				self.advance()
-			if c == '\n':
+			elif c == '\n':
 				self.line += 1
 				self.advance()
-			if c == '/':
+			elif c == '/':
 				if self.peekNext() == '/':
 					# A comment goes until the end of the line.
 					while self.peek() != '\n' and not self.isAtEnd():
