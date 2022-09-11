@@ -16,7 +16,12 @@ class Table:
 		return None
 
 	def set(self, key, value):
+		if key in self.__entries:
+			isNewKey = False
+		else:
+			isNewKey = True
 		self.__entries[key] = value
+		return isNewKey
 
 	def delete(self, key):
 		if key in self.__entries:
