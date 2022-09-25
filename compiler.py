@@ -39,6 +39,16 @@ class ParseRule:
 		self.infix = ruleInfix
 		self.precedence = rulePrecedence
 
+class Local:
+	def __init__(self):
+		self.name = Token()
+		self.depth = 0
+
+class CompilerState:
+	def __init__(self):
+		self.locals = []
+		self.scopeDepth = 0
+
 class Compiler:
 	"""Compiles source code"""
 
@@ -47,6 +57,7 @@ class Compiler:
 		self.currentIndex = 0
 		self.line = 1
 		self.parser = Parser()
+		self.current = CompilerState()
 		self.scanner = Scanner()
 		self.compilingChunk = Chunk()
 
@@ -129,6 +140,16 @@ class Compiler:
 				self.currentChunk().disassembleChunk("code")
 		self.emitReturn()
 
+	def beginScope(self):
+		self.current.scopeDepth += 1
+
+	def endScope(self):
+		self.current.scopeDepth -= 1
+
+		while len(self.current.locals) > 0 and self.current.locals[-1].depth > self.current.scopeDepth:
+			self.emitByte(OpCode.OP_POP)
+			self.current.locals.pop()
+
 	def binary(self, canAssign):
 		operatorType = self.parser.previous.type
 		rule = self.getRule(operatorType)
@@ -182,13 +203,20 @@ class Compiler:
 		self.emitConstant(Value.OBJ_VAL(obj))
 
 	def namedVariable(self, name, canAssign):
-		arg = self.identifierConstant(name)
+		arg = self.resolveLocal(name)
+		if arg != -1:
+			getOp = OpCode.OP_GET_LOCAL
+			setOp = OpCode.OP_SET_LOCAL
+		else:
+			arg = self.identifierConstant(name)
+			getOp = OpCode.OP_GET_GLOBAL
+			setOp = OpCode.OP_SET_GLOBAL
 
 		if canAssign and self.match(TokenType.TOKEN_EQUAL):
 			self.expression()
-			self.emitBytes(OpCode.OP_SET_GLOBAL, arg)
+			self.emitBytes(setOp, arg)
 		else:
-			self.emitBytes(OpCode.OP_GET_GLOBAL, arg)
+			self.emitBytes(getOp, arg)
 
 	def variable(self, canAssign):
 		self.namedVariable(self.parser.previous, canAssign)
@@ -274,15 +302,67 @@ class Compiler:
 		obj = Value.OBJ_VAL(ObjString(name.start))
 		return self.makeConstant(obj)
 
+	def identifiersEqual(self, a, b):
+		return a.start == b.start
+
+	def resolveLocal(self, name):
+		i = len(self.current.locals) - 1
+		while i >= 0:
+			local = self.current.locals[i]
+			if self.identifiersEqual(name, local.name):
+				if local.depth == -1:
+					self.error("Can't read local variable in its own initializer")
+				return i
+			i = i - 1
+		return -1
+
+	def addLocal(self, name):
+		if len(self.current.locals) == 256:
+			self.error("Too many local variables in function.")
+			return
+		local = Local()
+		local.name = name
+		local.depth = -1
+		self.current.locals.append(local)
+
+	def declareVariable(self):
+		if self.current.scopeDepth == 0:
+			return
+		name = self.parser.previous
+		i = len(self.current.locals) - 1
+		while i >= 0:
+			local = self.current.locals[i]
+			if local.depth != -1 and local.depth < self.current.scopeDepth:
+				break
+			if self.identifiersEqual(name, local.name):
+				self.error("Already a variable with this name in this scope.")
+			i = i - 1
+		self.addLocal(name)
+
 	def parseVariable(self, errorMessage):
 		self.consume(TokenType.TOKEN_IDENTIFIER, errorMessage)
+		self.declareVariable()
+		if self.current.scopeDepth > 0:
+			return 0
 		return self.identifierConstant(self.parser.previous)
 
+	def markInitialized(self):
+		self.current.locals[-1].depth = self.current.scopeDepth
+
 	def defineVariable(self, globalVar):
+		if self.current.scopeDepth > 0:
+			self.markInitialized()
+			return 0
 		self.emitBytes(OpCode.OP_DEFINE_GLOBAL, globalVar)
 
 	def expression(self):
 		self.parsePrecedence(Precedence.PREC_ASSIGNMENT)
+
+	def block(self):
+		while (not self.check(TokenType.TOKEN_RIGHT_BRACE) and
+			not self.check(TokenType.TOKEN_EOF)):
+			self.declaration()
+		self.consume(TokenType.TOKEN_RIGHT_BRACE, "Expect '}' after block.")
 
 	def expressionStatement(self):
 		self.expression()
@@ -333,6 +413,10 @@ class Compiler:
 	def statement(self):
 		if self.match(TokenType.TOKEN_PRINT):
 			self.printStatement()
+		elif self.match(TokenType.TOKEN_LEFT_BRACE):
+			self.beginScope()
+			self.block()
+			self.endScope()
 		else:
 			self.expressionStatement()
 

@@ -87,6 +87,14 @@ class VM:
 			if instruction == OpCode.OP_POP:
 				self.pop()
 
+			if instruction == OpCode.OP_GET_LOCAL:
+				slot = self.readByte()
+				self.push(self.stack[slot])
+
+			if instruction == OpCode.OP_SET_LOCAL:
+				slot = self.readByte()
+				self.stack[slot] = self.peek(0)
+
 			if instruction == OpCode.OP_GET_GLOBAL:
 				constant = self.readConstant()
 				name = constant.AS_OBJ()

@@ -9,20 +9,22 @@ class OpCode(IntEnum):
 	OP_TRUE = 3
 	OP_FALSE = 4
 	OP_POP = 5
-	OP_GET_GLOBAL = 6
-	OP_DEFINE_GLOBAL = 7
-	OP_SET_GLOBAL = 8
-	OP_EQUAL = 9
-	OP_GREATER = 10
-	OP_LESS = 11
-	OP_ADD = 12
-	OP_SUBTRACT  = 13
-	OP_MULTIPLY = 14
-	OP_DIVIDE = 15
-	OP_NOT = 16
-	OP_NEGATE = 17
-	OP_PRINT = 18
-	OP_RETURN = 19
+	OP_GET_LOCAL = 6
+	OP_SET_LOCAL = 7
+	OP_GET_GLOBAL = 8
+	OP_DEFINE_GLOBAL = 9
+	OP_SET_GLOBAL = 10
+	OP_EQUAL = 11
+	OP_GREATER = 12
+	OP_LESS = 13
+	OP_ADD = 14
+	OP_SUBTRACT  = 15
+	OP_MULTIPLY = 16
+	OP_DIVIDE = 17
+	OP_NOT = 18
+	OP_NEGATE = 19
+	OP_PRINT = 20
+	OP_RETURN = 21
 
 
 class Chunk:
@@ -77,6 +79,12 @@ class Chunk:
 
 		if op == OpCode.OP_POP:
 				return self.simpleInstruction("OP_POP", offset)
+
+		if op == OpCode.OP_GET_LOCAL:
+				return self.byteInstruction("OP_GET_LOCAL", offset)
+
+		if op == OpCode.OP_SET_LOCAL:
+				return self.byteInstruction("OP_SET_LOCAL", offset)
 
 		if op == OpCode.OP_GET_GLOBAL:
 				return self.constantInstruction("OP_GET_GLOBAL", offset)
@@ -149,3 +157,8 @@ class Chunk:
 	def simpleInstruction(self, name, offset):
 		print(name)
 		return offset + 1
+
+	def byteInstruction(self, name, offset):
+		slot = self.code[offset + 1]
+		print('{0:<16} {1:4d}'.format(name, slot))
+		return offset + 2
