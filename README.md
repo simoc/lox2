@@ -5,7 +5,7 @@ Lox compiler and virtual machine from Chapters 14-30 of the http://www.craftingi
 This implementation is in Python instead of C, but uses the same function
 names and logic.
 
-Currently, Chapters 14-21 are implemented.
+Currently, Chapters 14-22 are implemented.
 
 ## Usage
 
