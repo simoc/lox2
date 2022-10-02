@@ -121,6 +121,13 @@ class Compiler:
 		self.emitByte(byte1)
 		self.emitByte(byte2)
 
+	def emitJump(self, instruction):
+		self.emitByte(instruction)
+		# Add placeholder position that will be replaced after jump location determined
+		self.emitByte(0xff)
+		self.emitByte(0xff)
+		return len(self.currentChunk().code) - 2
+
 	def emitReturn(self):
 		self.emitByte(OpCode.OP_RETURN)
 
@@ -133,6 +140,14 @@ class Compiler:
 
 	def emitConstant(self, value):
 		self.emitBytes(OpCode.OP_CONSTANT, self.makeConstant(value))
+
+	def patchJump(self, offset):
+		# -2 to adjust for the bytecode for the jump offset itself.
+		jump = len(self.currentChunk().code) - offset - 2
+		if jump > 65535:
+			self.error("Too much code to jump over.")
+		self.currentChunk().code[offset] = (jump >> 8) & 0xff
+		self.currentChunk().code[offset + 1] = jump & 0xff
 
 	def endCompiler(self):
 		if DEBUG_PRINT_CODE == 1:
@@ -369,6 +384,22 @@ class Compiler:
 		self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after expression.")
 		self.emitByte(OpCode.OP_POP)
 
+	def ifStatement(self):
+		self.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after 'if'.")
+		self.expression()
+		self.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after condition.")
+		thenJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE)
+		self.emitByte(OpCode.OP_POP)
+		self.statement()
+
+		elseJump = self.emitJump(OpCode.OP_JUMP)
+
+		self.patchJump(thenJump)
+		self.emitByte(OpCode.OP_POP)
+		if (self.match(TokenType.TOKEN_ELSE)):
+			self.statement()
+		self.patchJump(elseJump)
+
 	def varDeclaration(self):
 		globalVar = self.parseVariable("Expect variable name.")
 
@@ -413,6 +444,8 @@ class Compiler:
 	def statement(self):
 		if self.match(TokenType.TOKEN_PRINT):
 			self.printStatement()
+		elif self.match(TokenType.TOKEN_IF):
+			self.ifStatement()
 		elif self.match(TokenType.TOKEN_LEFT_BRACE):
 			self.beginScope()
 			self.block()

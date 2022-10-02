@@ -24,7 +24,9 @@ class OpCode(IntEnum):
 	OP_NOT = 18
 	OP_NEGATE = 19
 	OP_PRINT = 20
-	OP_RETURN = 21
+	OP_JUMP = 21
+	OP_JUMP_IF_FALSE = 22
+	OP_RETURN = 23
 
 
 class Chunk:
@@ -125,6 +127,12 @@ class Chunk:
 		if op == OpCode.OP_PRINT:
 				return self.simpleInstruction("OP_PRINT", offset)
 
+		if op == OpCode.OP_JUMP:
+				return self.jumpInstruction("OP_JUMP", 1, offset)
+
+		if op == OpCode.OP_JUMP_IF_FALSE:
+				return self.jumpInstruction("OP_JUMP_IF_FALSE", 1, offset)
+
 		if op == OpCode.OP_RETURN:
 				return self.simpleInstruction("OP_RETURN", offset)
 
@@ -162,3 +170,9 @@ class Chunk:
 		slot = self.code[offset + 1]
 		print('{0:<16} {1:4d}'.format(name, slot))
 		return offset + 2
+
+	def jumpInstruction(self, name, sign, offset):
+		jump = self.code[offset + 1] << 8
+		jump = jump | (self.code[offset + 2])
+		print('{0:<16} {1:4d} -> {2}'.format(name, offset, offset + 3 + sign * jump))
+		return offset + 3

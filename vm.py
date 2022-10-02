@@ -190,6 +190,15 @@ class VM:
 				self.chunk.printValue(self.pop())
 				print()
 
+			if instruction == OpCode.OP_JUMP_IF_FALSE:
+				offset = self.readShort()
+				if (self.isFalsey(self.peek(0))):
+					self.ip += offset
+
+			if instruction == OpCode.OP_JUMP:
+				offset = self.readShort()
+				self.ip += offset
+
 			if instruction == OpCode.OP_RETURN:
 				# Exit interpreter.
 				return InterpretResult.INTERPRET_OK
@@ -198,6 +207,12 @@ class VM:
 		b = self.chunk.code[self.ip]
 		self.ip += 1
 		return b
+
+	def readShort(self):
+		b1 = self.chunk.code[self.ip]
+		b2 = self.chunk.code[self.ip + 1]
+		self.ip += 2
+		return (b1 << 8) | b2
 
 	def readConstant(self):
 		n = self.readByte()
