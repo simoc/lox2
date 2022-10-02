@@ -211,6 +211,14 @@ class Compiler:
 		value = float(self.parser.previous.start)
 		self.emitConstant(Value.NUMBER_VAL(value))
 
+	def or_(self, canAssign):
+		elseJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE)
+		endJump = self.emitJump(OpCode.OP_JUMP)
+		self.patchJump(elseJump)
+		self.emitByte(OpCode.OP_POP)
+		self.parsePrecedence(Precedence.PREC_OR)
+		self.patchJump(endJump)
+
 	def string(self, canAssign):
 		# Take string inside quotes
 		s = self.parser.previous.start[1 : -1]
@@ -275,7 +283,7 @@ class Compiler:
 			TokenType.TOKEN_IDENTIFIER:     ParseRule(self.variable,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_STRING:         ParseRule(self.string,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_NUMBER:         ParseRule(self.number,   None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_AND:            ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_AND:            ParseRule(None,     self.and_,   Precedence.PREC_AND),
 			TokenType.TOKEN_CLASS:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_ELSE:           ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_FALSE:          ParseRule(self.literal,     None,   Precedence.PREC_NONE),
@@ -283,7 +291,7 @@ class Compiler:
 			TokenType.TOKEN_FUN:            ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_IF:             ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_NIL:            ParseRule(self.literal,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_OR:             ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_OR:             ParseRule(None,     self.or_,   Precedence.PREC_OR),
 			TokenType.TOKEN_PRINT:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_RETURN:         ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_SUPER:          ParseRule(None,     None,   Precedence.PREC_NONE),
@@ -369,6 +377,12 @@ class Compiler:
 			self.markInitialized()
 			return 0
 		self.emitBytes(OpCode.OP_DEFINE_GLOBAL, globalVar)
+
+	def and_(self, canAssign):
+		endJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE);
+		self.emitByte(OpCode.OP_POP)
+		self.parsePrecedence(Precedence.PREC_AND)
+		self.patchJump(endJump)
 
 	def expression(self):
 		self.parsePrecedence(Precedence.PREC_ASSIGNMENT)
