@@ -199,6 +199,10 @@ class VM:
 				offset = self.readShort()
 				self.ip += offset
 
+			if instruction == OpCode.OP_LOOP:
+				offset = self.readShort()
+				self.ip -= offset
+
 			if instruction == OpCode.OP_RETURN:
 				# Exit interpreter.
 				return InterpretResult.INTERPRET_OK

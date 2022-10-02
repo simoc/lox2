@@ -121,6 +121,14 @@ class Compiler:
 		self.emitByte(byte1)
 		self.emitByte(byte2)
 
+	def emitLoop(self, loopStart):
+		self.emitByte(OpCode.OP_LOOP)
+		offset = len(self.currentChunk().code) - loopStart + 2
+		if offset > 65535:
+			self.error("Loop body too large.")
+		self.emitByte((offset >> 8) & 0xff)
+		self.emitByte(offset & 0xff)
+
 	def emitJump(self, instruction):
 		self.emitByte(instruction)
 		# Add placeholder position that will be replaced after jump location determined
@@ -429,6 +437,18 @@ class Compiler:
 		self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after value.")
 		self.emitByte(OpCode.OP_PRINT)
 
+	def whileStatement(self):
+		loopStart = len(self.currentChunk().code)
+		self.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after 'while'.")
+		self.expression()
+		self.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after condition.")
+		exitJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE)
+		self.emitByte(OpCode.OP_POP)
+		self.statement()
+		self.emitLoop(loopStart)
+		self.patchJump(exitJump)
+		self.emitByte(OpCode.OP_POP)
+
 	def synchronize(self):
 		self.parser.panicMode = False
 
@@ -460,6 +480,8 @@ class Compiler:
 			self.printStatement()
 		elif self.match(TokenType.TOKEN_IF):
 			self.ifStatement()
+		elif self.match(TokenType.TOKEN_WHILE):
+			self.whileStatement()
 		elif self.match(TokenType.TOKEN_LEFT_BRACE):
 			self.beginScope()
 			self.block()
