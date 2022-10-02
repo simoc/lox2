@@ -406,6 +406,43 @@ class Compiler:
 		self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after expression.")
 		self.emitByte(OpCode.OP_POP)
 
+	def forStatement(self):
+		self.beginScope()
+		self.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after 'for'.")
+		if self.match(TokenType.TOKEN_SEMICOLON):
+			# No initializer.
+			pass
+		elif self.match(TokenType.TOKEN_VAR):
+			self.varDeclaration()
+		else:
+			self.expressionStatement()
+		loopStart = len(self.currentChunk().code)
+		exitJump = -1
+		if not self.match(TokenType.TOKEN_SEMICOLON):
+			self.expression()
+			self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after loop condition.")
+			# Jump out of the loop if the condition is false.
+			exitJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE)
+			self.emitByte(OpCode.OP_POP) # Condition.
+
+		if not self.match(TokenType.TOKEN_RIGHT_PAREN):
+			bodyJump = self.emitJump(OpCode.OP_JUMP)
+			incrementStart = len(self.currentChunk().code)
+			self.expression()
+			self.emitByte(OpCode.OP_POP)
+			self.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.")
+			self.emitLoop(loopStart)
+			loopStart = incrementStart
+			self.patchJump(bodyJump)
+
+		self.statement()
+		self.emitLoop(loopStart)
+		if exitJump != -1:
+			self.patchJump(exitJump)
+			self.emitByte(OpCode.OP_POP) # Condition.
+
+		self.endScope()
+
 	def ifStatement(self):
 		self.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after 'if'.")
 		self.expression()
@@ -478,6 +515,8 @@ class Compiler:
 	def statement(self):
 		if self.match(TokenType.TOKEN_PRINT):
 			self.printStatement()
+		elif self.match(TokenType.TOKEN_FOR):
+			self.forStatement()
 		elif self.match(TokenType.TOKEN_IF):
 			self.ifStatement()
 		elif self.match(TokenType.TOKEN_WHILE):
