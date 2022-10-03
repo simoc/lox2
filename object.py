@@ -41,10 +41,6 @@ class ObjFunction(Obj):
 			print('>', end='')
 
 class ObjString(Obj):
-	def __init__(self):
-		super().__init__(ObjType.OBJ_STRING)
-		self.__chars = ""
-
 	def __init__(self, str):
 		super().__init__(ObjType.OBJ_STRING)
 		self.__chars = str
