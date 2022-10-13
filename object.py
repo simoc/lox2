@@ -28,6 +28,9 @@ class ObjFunction(Obj):
 	def __hash__(self):
 		return hash(self.__name)
 
+	def getName(self):
+		return self.__name
+
 	def IS_FUNCTION(self):
 		return self.OBJ_TYPE() == ObjType.OBJ_FUNCTION
 

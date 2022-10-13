@@ -3,6 +3,14 @@ from chunk import *
 from compiler import *
 from value import *
 from table import *
+from object import *
+
+class CallFrame:
+	"""A CallFrame represents a single ongoing function call"""
+	def __init__(self):
+		self.function = ObjFunction(None)
+		self.ip = 0
+		self.slots = []
 
 class InterpretResult(IntEnum):
 	"""Possible results of interpreting chunk of bytecode"""
@@ -17,19 +25,19 @@ class VM:
 
 	def initVm(self):
 		"""Setup empty virtual machine"""
-		self.chunk = Chunk()
-		self.ip = 0
 		self.resetStack()
 		self.debugTraceExecution = 0
 		self.globals = Table()
 
 	def resetStack(self):
 		self.stack = []
+		self.frames = []
 
 	def runtimeError(self, message):
 		print(message, file=sys.stderr)
-		instruction = self.ip - 1
-		line = self.chunk.lines[instruction]
+		frame = self.frames[-1]
+		instruction = frame.ip - 1
+		line = frame.function.chunk.lines[instruction]
 		print("[line {0}] in script".format(line), file=sys.stderr)
 		self.resetStack()
 
@@ -39,17 +47,19 @@ class VM:
 
 	def interpret(self, source):
 		"""Interpret lox source code"""
-		chunk = Chunk()
 		c = Compiler()
-		if c.compile(source, chunk) == False:
+		function = c.compile(source)
+		if function == None:
 			return InterpretResult.INTERPRET_COMPILE_ERROR
 
-		self.chunk = chunk
-		self.ip = 0
-		result = self.run()
-		self.chunk.freeChunk()
+		self.push(Value.OBJ_VAL(function))
+		frame = CallFrame()
+		frame.function = function
+		frame.ip = 0
+		frame.slots = self.stack
+		self.frames.append(frame)
 
-		return result
+		return self.run()
 
 	def checkNumberBinaryOperands(self):
 		return self.peek(0).IS_NUMBER() and self.peek(1).IS_NUMBER()
@@ -59,17 +69,18 @@ class VM:
 			return self.peek(0).AS_OBJ().IS_STRING() and self.peek(1).AS_OBJ().IS_STRING()
 
 	def run(self):
+		frame = self.frames[-1]
 		while True:
 			if self.debugTraceExecution != 0:
 					print('        ', end='')
 					i = 0
 					while i < len(self.stack):
 						print('[ ', end='')
-						self.chunk.printValue(self.stack[i])
+						frame.function.chunk.printValue(self.stack[i])
 						print(' ]', end='')
 						i += 1
 					print('')
-					self.chunk.disassembleInstruction(self.ip)
+					frame.function.chunk.disassembleInstruction(frame.ip)
 			instruction = self.readByte()
 			if instruction == OpCode.OP_CONSTANT:
 				constant = self.readConstant()
@@ -89,11 +100,11 @@ class VM:
 
 			if instruction == OpCode.OP_GET_LOCAL:
 				slot = self.readByte()
-				self.push(self.stack[slot])
+				self.push(frame.slots[slot])
 
 			if instruction == OpCode.OP_SET_LOCAL:
 				slot = self.readByte()
-				self.stack[slot] = self.peek(0)
+				frame.slots[slot] = self.peek(0)
 
 			if instruction == OpCode.OP_GET_GLOBAL:
 				constant = self.readConstant()
@@ -187,40 +198,43 @@ class VM:
 				self.push(Value.NUMBER_VAL(-n))
 
 			if instruction == OpCode.OP_PRINT:
-				self.chunk.printValue(self.pop())
+				frame.function.chunk.printValue(self.pop())
 				print()
 
 			if instruction == OpCode.OP_JUMP_IF_FALSE:
 				offset = self.readShort()
 				if (self.isFalsey(self.peek(0))):
-					self.ip += offset
+					frame.ip += offset
 
 			if instruction == OpCode.OP_JUMP:
 				offset = self.readShort()
-				self.ip += offset
+				frame.ip += offset
 
 			if instruction == OpCode.OP_LOOP:
 				offset = self.readShort()
-				self.ip -= offset
+				frame.ip -= offset
 
 			if instruction == OpCode.OP_RETURN:
 				# Exit interpreter.
 				return InterpretResult.INTERPRET_OK
 
 	def readByte(self):
-		b = self.chunk.code[self.ip]
-		self.ip += 1
+		frame = self.frames[-1]
+		b = frame.function.chunk.code[frame.ip]
+		frame.ip += 1
 		return b
 
 	def readShort(self):
-		b1 = self.chunk.code[self.ip]
-		b2 = self.chunk.code[self.ip + 1]
-		self.ip += 2
+		frame = self.frames[-1]
+		b1 = frame.function.chunk.code[frame.ip]
+		b2 = frame.function.chunk.code[frame.ip + 1]
+		frame.ip += 2
 		return (b1 << 8) | b2
 
 	def readConstant(self):
 		n = self.readByte()
-		return self.chunk.constants[n]
+		frame = self.frames[-1]
+		return frame.function.chunk.constants[n]
 
 	def push(self, value):
 		self.stack.append(value)

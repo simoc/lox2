@@ -44,8 +44,14 @@ class Local:
 		self.name = Token()
 		self.depth = 0
 
+class FunctionType(IntEnum):
+	TYPE_FUNCTION = 0
+	TYPE_SCRIPT = 1
+
 class CompilerState:
 	def __init__(self):
+		self.function = ObjFunction(None)
+		self.type = FunctionType.TYPE_SCRIPT
 		self.locals = []
 		self.scopeDepth = 0
 
@@ -58,8 +64,14 @@ class Compiler:
 		self.line = 1
 		self.parser = Parser()
 		self.current = CompilerState()
+
+		local = Local()
+		local.name = Token()
+		local.name.type = TokenType.TOKEN_STRING
+		local.depth = 0
+		self.current.locals.append(local)
+
 		self.scanner = Scanner()
-		self.compilingChunk = Chunk()
 
 	def errorAt3(self, token, message):
 		if self.parser.panicMode:
@@ -112,7 +124,7 @@ class Compiler:
 		return True
 
 	def currentChunk(self):
-		return self.compilingChunk
+		return self.current.function.chunk
 
 	def emitByte(self, byte):
 		self.currentChunk().writeChunk(byte, self.parser.previous.line)
@@ -158,10 +170,16 @@ class Compiler:
 		self.currentChunk().code[offset + 1] = jump & 0xff
 
 	def endCompiler(self):
+		self.emitReturn()
+		function = self.current.function
 		if DEBUG_PRINT_CODE == 1:
 			if not self.parser.hadError:
-				self.currentChunk().disassembleChunk("code")
-		self.emitReturn()
+				if function.getName() != None:
+					name = function.getName().AS_STRING()
+				else:
+					name = "<script>"
+				self.currentChunk().disassembleChunk(name)
+		return function
 
 	def beginScope(self):
 		self.current.scopeDepth += 1
@@ -528,10 +546,11 @@ class Compiler:
 		else:
 			self.expressionStatement()
 
-	def compile(self, source, chunk):
+	def compile(self, source):
 		self.scanner = Scanner()
 		self.scanner.initScanner(source)
-		self.compilingChunk = chunk
+		self.current.function = ObjFunction(None)
+		self.current.type = type
 
 		self.parser.hadError = False
 		self.parser.panicMode = False
@@ -541,7 +560,8 @@ class Compiler:
 		while not self.match(TokenType.TOKEN_EOF):
 			self.declaration()
 
-		self.endCompiler()
-		return not self.parser.hadError
-
-
+		function = self.endCompiler()
+		if self.parser.hadError:
+			return None
+		else:
+			return function
