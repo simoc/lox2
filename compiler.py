@@ -58,12 +58,15 @@ class CompilerState:
 class Compiler:
 	"""Compiles source code"""
 
-	def __init__(self):
+	def __init__(self, compiler, type):
+		self.enclosing = compiler
 		self.start = ""
 		self.currentIndex = 0
 		self.line = 1
 		self.parser = Parser()
 		self.current = CompilerState()
+		if type != FunctionType.TYPE_SCRIPT:
+			self.current.function = ObjFunction(ObjString(compiler.parser.previous.start))
 
 		local = Local()
 		local.name = Token()
@@ -396,6 +399,8 @@ class Compiler:
 		return self.identifierConstant(self.parser.previous)
 
 	def markInitialized(self):
+		if self.current.scopeDepth == 0:
+			return
 		self.current.locals[-1].depth = self.current.scopeDepth
 
 	def defineVariable(self, globalVar):
@@ -418,6 +423,35 @@ class Compiler:
 			not self.check(TokenType.TOKEN_EOF)):
 			self.declaration()
 		self.consume(TokenType.TOKEN_RIGHT_BRACE, "Expect '}' after block.")
+
+	def function(self, type):
+		compiler = Compiler(self, type)
+		compiler.current.type = type
+		self.beginScope()
+
+		self.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after function name.")
+		if not self.check(TokenType.TOKEN_RIGHT_PAREN):
+			while true:
+				self.current.function.arity += 1
+				if self.current.function.arity > 255:
+					self.errorAtCurrent("Can't have more than 255 parameters.")
+				constant = self.parseVariable("Expect parameter name.")
+				self.defineVariable(constant)
+				if not self.match(TokenType.TOKEN_COMMA):
+					break
+
+		self.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after parameters.")
+		self.consume(TokenType.TOKEN_LEFT_BRACE, "Expect '{' before function body.")
+		self.block()
+		function = compiler.endCompiler()
+		value = Value.OBJ_VAL(function)
+		self.emitBytes(OpCode.OP_CONSTANT, self.makeConstant(value))
+
+	def funDeclaration(self):
+		globalVar = self.parseVariable("Expect function name.")
+		self.markInitialized()
+		self.function(FunctionType.TYPE_FUNCTION)
+		self.defineVariable(globalVar)
 
 	def expressionStatement(self):
 		self.expression()
@@ -522,7 +556,9 @@ class Compiler:
 			self.advance()
 
 	def declaration(self):
-		if self.match(TokenType.TOKEN_VAR):
+		if self.match(TokenType.TOKEN_FUN):
+			self.funDeclaration()
+		elif self.match(TokenType.TOKEN_VAR):
 			self.varDeclaration()
 		else:
 			self.statement()
@@ -549,7 +585,7 @@ class Compiler:
 	def compile(self, source):
 		self.scanner = Scanner()
 		self.scanner.initScanner(source)
-		self.current.function = ObjFunction(None)
+		#self.current.function = ObjFunction(None)
 		self.current.type = type
 
 		self.parser.hadError = False

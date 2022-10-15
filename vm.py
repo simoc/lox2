@@ -47,7 +47,7 @@ class VM:
 
 	def interpret(self, source):
 		"""Interpret lox source code"""
-		c = Compiler()
+		c = Compiler(None, FunctionType.TYPE_SCRIPT)
 		function = c.compile(source)
 		if function == None:
 			return InterpretResult.INTERPRET_COMPILE_ERROR
