@@ -49,9 +49,9 @@ class FunctionType(IntEnum):
 	TYPE_SCRIPT = 1
 
 class CompilerState:
-	def __init__(self):
+	def __init__(self, type):
 		self.function = ObjFunction(None)
-		self.type = FunctionType.TYPE_SCRIPT
+		self.type = type
 		self.locals = []
 		self.scopeDepth = 0
 
@@ -64,7 +64,7 @@ class Compiler:
 		self.currentIndex = 0
 		self.line = 1
 		self.parser = Parser()
-		self.current = CompilerState()
+		self.current = CompilerState(type)
 		if type != FunctionType.TYPE_SCRIPT:
 			self.current.function = ObjFunction(ObjString(compiler.parser.previous.start))
 
@@ -152,6 +152,7 @@ class Compiler:
 		return len(self.currentChunk().code) - 2
 
 	def emitReturn(self):
+		self.emitByte(OpCode.OP_NIL)
 		self.emitByte(OpCode.OP_RETURN)
 
 	def makeConstant(self, value):
@@ -223,6 +224,10 @@ class Compiler:
 			# Unreachable
 			return
 
+	def call(self, canAssign):
+		argCount = self.argumentList()
+		self.emitBytes(OpCode.OP_CALL, argCount)
+
 	def literal(self, canAssign):
 		operatorType = self.parser.previous.type
 		if operatorType == TokenType.TOKEN_FALSE:
@@ -290,7 +295,7 @@ class Compiler:
 
 	def getRule(self, type):
 		rules = {
-			TokenType.TOKEN_LEFT_PAREN:     ParseRule(self.grouping, None, Precedence.PREC_NONE),
+			TokenType.TOKEN_LEFT_PAREN:     ParseRule(self.grouping, self.call, Precedence.PREC_CALL),
 			TokenType.TOKEN_RIGHT_PAREN:    ParseRule(None, None, Precedence.PREC_NONE),
 			TokenType.TOKEN_LEFT_BRACE:     ParseRule(None, None, Precedence.PREC_NONE),
 			TokenType.TOKEN_RIGHT_BRACE:    ParseRule(None,     None,   Precedence.PREC_NONE),
@@ -409,6 +414,19 @@ class Compiler:
 			return 0
 		self.emitBytes(OpCode.OP_DEFINE_GLOBAL, globalVar)
 
+	def argumentList(self):
+		argCount = 0
+		if not self.check(TokenType.TOKEN_RIGHT_PAREN):
+			while True:
+				self.expression()
+				if argCount == 255:
+					self.error("Can't have more than 255 arguments.")
+				argCount += 1
+				if not self.match(TokenType.TOKEN_COMMA):
+					break
+		self.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after arguments.")
+		return argCount
+
 	def and_(self, canAssign):
 		endJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE);
 		self.emitByte(OpCode.OP_POP)
@@ -426,23 +444,25 @@ class Compiler:
 
 	def function(self, type):
 		compiler = Compiler(self, type)
-		compiler.current.type = type
-		self.beginScope()
+		compiler.parser = self.parser
+		compiler.scanner = self.scanner
+		compiler.beginScope()
 
-		self.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after function name.")
-		if not self.check(TokenType.TOKEN_RIGHT_PAREN):
-			while true:
-				self.current.function.arity += 1
-				if self.current.function.arity > 255:
-					self.errorAtCurrent("Can't have more than 255 parameters.")
-				constant = self.parseVariable("Expect parameter name.")
-				self.defineVariable(constant)
-				if not self.match(TokenType.TOKEN_COMMA):
+		compiler.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after function name.")
+
+		if not compiler.check(TokenType.TOKEN_RIGHT_PAREN):
+			while True:
+				compiler.current.function.arity += 1
+				if compiler.current.function.arity > 255:
+					compiler.errorAtCurrent("Can't have more than 255 parameters.")
+				constant = compiler.parseVariable("Expect parameter name.")
+				compiler.defineVariable(constant)
+				if not compiler.match(TokenType.TOKEN_COMMA):
 					break
 
-		self.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after parameters.")
-		self.consume(TokenType.TOKEN_LEFT_BRACE, "Expect '{' before function body.")
-		self.block()
+		compiler.consume(TokenType.TOKEN_RIGHT_PAREN, "Expect ')' after parameters.")
+		compiler.consume(TokenType.TOKEN_LEFT_BRACE, "Expect '{' before function body.")
+		compiler.block()
 		function = compiler.endCompiler()
 		value = Value.OBJ_VAL(function)
 		self.emitBytes(OpCode.OP_CONSTANT, self.makeConstant(value))
@@ -526,6 +546,17 @@ class Compiler:
 		self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after value.")
 		self.emitByte(OpCode.OP_PRINT)
 
+	def returnStatement(self):
+		if self.current.type == FunctionType.TYPE_SCRIPT:
+			self.error("Can't return from top-level code.")
+
+		if self.match(TokenType.TOKEN_SEMICOLON):
+			self.emitByte(OpCode.OP_RETURN)
+		else:
+			self.expression()
+			self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after return value.")
+			self.emitByte(OpCode.OP_RETURN)
+
 	def whileStatement(self):
 		loopStart = len(self.currentChunk().code)
 		self.consume(TokenType.TOKEN_LEFT_PAREN, "Expect '(' after 'while'.")
@@ -573,6 +604,8 @@ class Compiler:
 			self.forStatement()
 		elif self.match(TokenType.TOKEN_IF):
 			self.ifStatement()
+		elif self.match(TokenType.TOKEN_RETURN):
+			self.returnStatement()
 		elif self.match(TokenType.TOKEN_WHILE):
 			self.whileStatement()
 		elif self.match(TokenType.TOKEN_LEFT_BRACE):

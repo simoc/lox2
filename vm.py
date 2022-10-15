@@ -39,6 +39,18 @@ class VM:
 		instruction = frame.ip - 1
 		line = frame.function.chunk.lines[instruction]
 		print("[line {0}] in script".format(line), file=sys.stderr)
+
+		i = len(self.frames) - 1
+		while i >= 0:
+			frame = self.frames[i]
+			function = frame.function
+			instruction = frame.ip
+			print("[line {0}] in ".format(function.chunk.lines[instruction]), file=sys.stderr, end='')
+			if function.getName() == None:
+				print("script", file=sys.stderr)
+			else:
+				print("{0}()".format(function.getName().AS_STRING()), file=sys.stderr)
+			i -= 1
 		self.resetStack()
 
 	def freeVm(self):
@@ -53,11 +65,7 @@ class VM:
 			return InterpretResult.INTERPRET_COMPILE_ERROR
 
 		self.push(Value.OBJ_VAL(function))
-		frame = CallFrame()
-		frame.function = function
-		frame.ip = 0
-		frame.slots = self.stack
-		self.frames.append(frame)
+		self.call(function, 0)
 
 		return self.run()
 
@@ -214,9 +222,21 @@ class VM:
 				offset = self.readShort()
 				frame.ip -= offset
 
+			if instruction == OpCode.OP_CALL:
+				argCount = self.readByte()
+				if not self.callValue(self.peek(argCount), argCount):
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+				frame = self.frames[-1]
+
 			if instruction == OpCode.OP_RETURN:
-				# Exit interpreter.
-				return InterpretResult.INTERPRET_OK
+				result = self.pop();
+				self.frames.pop()
+				if len(self.frames) == 0:
+					self.pop()
+					return InterpretResult.INTERPRET_OK
+
+				self.push(result)
+				frame = self.frames[-1]
 
 	def readByte(self):
 		frame = self.frames[-1]
@@ -245,6 +265,27 @@ class VM:
 	def peek(self, distance):
 		"""Peek value that is distance elements from top of stack without modifying stack"""
 		return self.stack[len(self.stack) - 1 - distance]
+
+	def call(self, function, argCount):
+		if argCount != function.arity:
+			self.runtimeError("Expected {0} arguments but got {1}.".format(function.arity, argCount))
+			return False
+		if len(self.frames) == 64:
+			self.runtimeError("Stack overflow.")
+			return False
+		frame = CallFrame()
+		frame.function = function
+		frame.ip = 0
+		frame.slots = self.stack
+		self.frames.append(frame)
+		return True
+
+	def callValue(self, callee, argCount):
+		if callee.IS_OBJ():
+			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_FUNCTION:
+				return self.call(callee.AS_OBJ(), argCount)
+		self.runtimeError("Can only call functions and classes.")
+		return False
 
 	def isFalsey(self, value):
 		if value.IS_NIL():

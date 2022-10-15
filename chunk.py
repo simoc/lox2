@@ -27,7 +27,8 @@ class OpCode(IntEnum):
 	OP_JUMP = 21
 	OP_JUMP_IF_FALSE = 22
 	OP_LOOP = 23
-	OP_RETURN = 24
+	OP_CALL = 24
+	OP_RETURN = 25
 
 
 class Chunk:
@@ -136,6 +137,9 @@ class Chunk:
 
 		if op == OpCode.OP_LOOP:
 				return self.jumpInstruction("OP_LOOP", -1, offset)
+
+		if op == OpCode.OP_CALL:
+				return self.byteInstruction("OP_CALL", offset)
 
 		if op == OpCode.OP_RETURN:
 				return self.simpleInstruction("OP_RETURN", offset)
