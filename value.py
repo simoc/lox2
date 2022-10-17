@@ -58,9 +58,6 @@ class Value:
 	def AS_OBJ(self):
 		return self.__obj
 
-	def printValue(value):
-		print('{0:g}'.format(value.AS_NUMBER()), end='')
-
 	def valuesEqual(a, b):
 		if a.__type != b.__type:
 			return False
