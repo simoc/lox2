@@ -61,7 +61,6 @@ class Compiler:
 	def __init__(self, compiler, type):
 		self.enclosing = compiler
 		self.start = ""
-		self.currentIndex = 0
 		self.line = 1
 		self.parser = Parser()
 		self.current = CompilerState(type)
