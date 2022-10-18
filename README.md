@@ -5,65 +5,45 @@ Lox compiler and virtual machine from Chapters 14-30 of the http://www.craftingi
 This implementation is in Python instead of C, but uses the same function
 names and logic.
 
-Currently, Chapters 14-23 are implemented.
+Currently, Chapters 14-24 are implemented.
 
 ## Usage
 
 ```
-C:\Git_Repos\lox2>type chapter21.4.lox
-var breakfast = "beignets";
-var beverage = "cafe au lait";
-breakfast = "beignets with " + beverage;
-
-print breakfast;
-
-C:\Git_Repos\lox2>python main.py chapter21.4.lox
-=== code ===
-0000    1 OP_CONSTANT         1 'beignets'
-0002    | OP_DEFINE_GLOBAL    0 'breakfast'
-0004    2 OP_CONSTANT         3 'cafe au lait'
-0006    | OP_DEFINE_GLOBAL    2 'beverage'
-0008    3 OP_CONSTANT         5 'beignets with '
-0010    | OP_GET_GLOBAL       6 'beverage'
-0012    | OP_ADD
-0013    | OP_SET_GLOBAL       4 'breakfast'
-0015    | OP_POP
-0016    5 OP_GET_GLOBAL       7 'breakfast'
-0018    | OP_PRINT
-beignets with cafe au lait
-
-C:\Git_Repos\lox2>type chapter23.lox
+$ cat chapter23.lox
 print "begin";
-for (var i = 0; i < 5; i = i + 1)
+var i = 0;
+while (i < 5)
 {
-	print(i);
+        print(i);
+        i = i + 1;
 }
 print "end";
 
-C:\Git_Repos\lox2>python main.py chapter23.lox
-=== code ===
+$ python3 main.py chapter23.lox
+=== <script> ===
 0000    1 OP_CONSTANT         0 'begin'
 0002    | OP_PRINT
-0003    2 OP_CONSTANT         1 '0'
-0005    | OP_GET_LOCAL        0
-0007    | OP_CONSTANT         2 '5'
-0009    | OP_LESS
-0010    | OP_JUMP_IF_FALSE   10 -> 34
-0013    | OP_POP
-0014    | OP_JUMP            14 -> 28
-0017    | OP_GET_LOCAL        0
-0019    | OP_CONSTANT         3 '1'
-0021    | OP_ADD
-0022    | OP_SET_LOCAL        0
-0024    | OP_POP
-0025    | OP_LOOP            25 -> 5
-0028    4 OP_GET_LOCAL        0
-0030    | OP_PRINT
-0031    5 OP_LOOP            31 -> 17
-0034    | OP_POP
-0035    | OP_POP
-0036    6 OP_CONSTANT         4 'end'
-0038    | OP_PRINT
+0003    2 OP_CONSTANT         2 '0'
+0005    | OP_DEFINE_GLOBAL    1 'i'
+0007    3 OP_GET_GLOBAL       3 'i'
+0009    | OP_CONSTANT         4 '5'
+0011    | OP_LESS
+0012    | OP_JUMP_IF_FALSE   12 -> 30
+0015    | OP_POP
+0016    5 OP_GET_GLOBAL       5 'i'
+0018    | OP_PRINT
+0019    6 OP_GET_GLOBAL       7 'i'
+0021    | OP_CONSTANT         8 '1'
+0023    | OP_ADD
+0024    | OP_SET_GLOBAL       6 'i'
+0026    | OP_POP
+0027    7 OP_LOOP            27 -> 7
+0030    | OP_POP
+0031    8 OP_CONSTANT         9 'end'
+0033    | OP_PRINT
+0034    9 OP_NIL
+0035    | OP_RETURN
 begin
 0
 1
@@ -71,4 +51,36 @@ begin
 3
 4
 end
+
+$ cat chapter24.5.1.lox
+fun sum(a, b, c) {
+  return a + b + c;
+}
+
+print 4 + sum(5, 6, 7);
+
+$ python3 main.py chapter24.5.1.lox
+=== sum ===
+0000    2 OP_GET_LOCAL        1
+0002    | OP_GET_LOCAL        2
+0004    | OP_ADD
+0005    | OP_GET_LOCAL        3
+0007    | OP_ADD
+0008    | OP_RETURN
+0009    3 OP_NIL
+0010    | OP_RETURN
+=== <script> ===
+0000    3 OP_CONSTANT         1 '<fn sum>'
+0002    | OP_DEFINE_GLOBAL    0 'sum'
+0004    5 OP_CONSTANT         2 '4'
+0006    | OP_GET_GLOBAL       3 'sum'
+0008    | OP_CONSTANT         4 '5'
+0010    | OP_CONSTANT         5 '6'
+0012    | OP_CONSTANT         6 '7'
+0014    | OP_CALL             3
+0016    | OP_ADD
+0017    | OP_PRINT
+0018    6 OP_NIL
+0019    | OP_RETURN
+22
 ```
