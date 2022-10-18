@@ -10,7 +10,15 @@ class CallFrame:
 	def __init__(self):
 		self.function = ObjFunction(None)
 		self.ip = 0
-		self.slots = []
+		self.stack = []
+		# index of first slot in self.stack for this call frame
+		self.firstSlotInStack = 0
+
+	def getSlot(self, index):
+		return self.stack[self.firstSlotInStack + index]
+
+	def setSlot(self, index, value):
+		self.stack[self.firstSlotInStack + index] = value
 
 class InterpretResult(IntEnum):
 	"""Possible results of interpreting chunk of bytecode"""
@@ -65,7 +73,12 @@ class VM:
 			return InterpretResult.INTERPRET_COMPILE_ERROR
 
 		self.push(Value.OBJ_VAL(function))
-		self.call(function, 0)
+		frame = CallFrame()
+		frame.function = function
+		frame.ip = 0
+		frame.stack = self.stack
+		frame.firstSlotInStack = 0
+		self.frames.append(frame)
 
 		return self.run()
 
@@ -108,11 +121,11 @@ class VM:
 
 			if instruction == OpCode.OP_GET_LOCAL:
 				slot = self.readByte()
-				self.push(frame.slots[slot])
+				self.push(frame.getSlot(slot))
 
 			if instruction == OpCode.OP_SET_LOCAL:
 				slot = self.readByte()
-				frame.slots[slot] = self.peek(0)
+				frame.setSlot(slot, self.peek(0))
 
 			if instruction == OpCode.OP_GET_GLOBAL:
 				constant = self.readConstant()
@@ -230,10 +243,16 @@ class VM:
 
 			if instruction == OpCode.OP_RETURN:
 				result = self.pop();
+				firstSlotInStack = self.frames[-1].firstSlotInStack
 				self.frames.pop()
 				if len(self.frames) == 0:
 					self.pop()
 					return InterpretResult.INTERPRET_OK
+
+				# pop the arguments passed to the function, so it
+				# returns to the state before the function was called.
+				while len(self.stack) > firstSlotInStack:
+					self.pop()
 
 				self.push(result)
 				frame = self.frames[-1]
@@ -276,7 +295,9 @@ class VM:
 		frame = CallFrame()
 		frame.function = function
 		frame.ip = 0
-		frame.slots = self.stack
+		frame.stack = self.stack
+		# Set index of first slot in stack for this call.
+		frame.firstSlotInStack = len(self.stack) - (argCount + 1)
 		self.frames.append(frame)
 		return True
 
