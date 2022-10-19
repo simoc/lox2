@@ -4,7 +4,8 @@ from chunk import *
 
 class ObjType(IntEnum):
 	OBJ_FUNCTION = 0
-	OBJ_STRING = 1
+	OBJ_NATIVE = 1
+	OBJ_STRING = 2
 
 class Obj:
 	def __init__(self, type):
@@ -42,6 +43,20 @@ class ObjFunction(Obj):
 			print('<fn ', end='')
 			self.__name.printObject()
 			print('>', end='')
+
+class ObjNative(Obj):
+	def __init__(self, function):
+		super().__init__(ObjType.OBJ_NATIVE)
+		self.__function = function
+
+	def printObject(self):
+		print('<native fn>', end='')
+
+	def IS_NATIVE(self):
+		return self.OBJ_TYPE() == ObjType.OBJ_NATIVE
+
+	def AS_NATIVE(self):
+		return self.__function
 
 class ObjString(Obj):
 	def __init__(self, str):

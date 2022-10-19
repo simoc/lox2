@@ -4,6 +4,7 @@ from compiler import *
 from value import *
 from table import *
 from object import *
+import time
 
 class CallFrame:
 	"""A CallFrame represents a single ongoing function call"""
@@ -31,11 +32,16 @@ class VM:
 	def __init__(self):
 		self.initVm()
 
+	def clockNative(self, argCount, args):
+		"""Return elapsed processor time in seconds"""
+		return Value.NUMBER_VAL(time.process_time())
+
 	def initVm(self):
 		"""Setup empty virtual machine"""
 		self.resetStack()
 		self.debugTraceExecution = 0
 		self.globals = Table()
+		self.defineNative("clock", self.clockNative)
 
 	def resetStack(self):
 		self.stack = []
@@ -60,6 +66,13 @@ class VM:
 				print("{0}()".format(function.getName().AS_STRING()), file=sys.stderr)
 			i -= 1
 		self.resetStack()
+
+	def defineNative(self, name, function):
+		self.push(ObjString(name))
+		self.push(Value.OBJ_VAL(ObjNative(function)))
+		self.globals.set(self.peek(1), self.peek(0))
+		self.pop()
+		self.pop()
 
 	def freeVm(self):
 		"""Free memory used by virtual machine"""
@@ -305,6 +318,15 @@ class VM:
 		if callee.IS_OBJ():
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_FUNCTION:
 				return self.call(callee.AS_OBJ(), argCount)
+			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_NATIVE:
+				native = callee.AS_OBJ().AS_NATIVE()
+				result = native(argCount, self.stack[-argCount:])
+				i = argCount + 1
+				while i > 0:
+					self.stack.pop()
+					i -= 1
+				self.push(result)
+				return True
 		self.runtimeError("Can only call functions and classes.")
 		return False
 
