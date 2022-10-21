@@ -3,9 +3,10 @@ from value import *
 from chunk import *
 
 class ObjType(IntEnum):
-	OBJ_FUNCTION = 0
-	OBJ_NATIVE = 1
-	OBJ_STRING = 2
+	OBJ_CLOSURE = 0
+	OBJ_FUNCTION = 1
+	OBJ_NATIVE = 2
+	OBJ_STRING = 3
 
 class Obj:
 	def __init__(self, type):
@@ -83,3 +84,14 @@ class ObjString(Obj):
 	def printObject(self):
 		if self.OBJ_TYPE() == ObjType.OBJ_STRING:
 			print(self.AS_CSTRING(), end='')
+
+class ObjClosure(Obj):
+	def __init__(self, function):
+		super().__init__(ObjType.OBJ_CLOSURE)
+		self.__function = function
+
+	def IS_CLOSURE(self):
+		return self.OBJ_TYPE() == ObjType.OBJ_CLOSURE
+
+	def AS_CLOSURE(self):
+		return self.__function

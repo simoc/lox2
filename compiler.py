@@ -464,7 +464,7 @@ class Compiler:
 		compiler.block()
 		function = compiler.endCompiler()
 		value = Value.OBJ_VAL(function)
-		self.emitBytes(OpCode.OP_CONSTANT, self.makeConstant(value))
+		self.emitBytes(OpCode.OP_CLOSURE, self.makeConstant(value))
 
 	def funDeclaration(self):
 		globalVar = self.parseVariable("Expect function name.")

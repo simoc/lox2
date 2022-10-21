@@ -9,7 +9,7 @@ import time
 class CallFrame:
 	"""A CallFrame represents a single ongoing function call"""
 	def __init__(self):
-		self.function = ObjFunction(None)
+		self.closure = ObjClosure(ObjFunction(None))
 		self.ip = 0
 		self.stack = []
 		# index of first slot in self.stack for this call frame
@@ -51,19 +51,19 @@ class VM:
 		print(message, file=sys.stderr)
 		frame = self.frames[-1]
 		instruction = frame.ip - 1
-		line = frame.function.chunk.lines[instruction]
+		line = frame.closure.AS_CLOSURE().chunk.lines[instruction]
 		print("[line {0}] in script".format(line), file=sys.stderr)
 
 		i = len(self.frames) - 1
 		while i >= 0:
 			frame = self.frames[i]
-			function = frame.function
+			closure = frame.closure
 			instruction = frame.ip
-			print("[line {0}] in ".format(function.chunk.lines[instruction]), file=sys.stderr, end='')
-			if function.getName() == None:
+			print("[line {0}] in ".format(closure.AS_CLOSURE().chunk.lines[instruction]), file=sys.stderr, end='')
+			if closure.AS_CLOSURE().getName() == None:
 				print("script", file=sys.stderr)
 			else:
-				print("{0}()".format(function.getName().AS_STRING()), file=sys.stderr)
+				print("{0}()".format(closure.AS_CLOSURE().getName().AS_STRING()), file=sys.stderr)
 			i -= 1
 		self.resetStack()
 
@@ -87,7 +87,10 @@ class VM:
 
 		self.push(Value.OBJ_VAL(function))
 		frame = CallFrame()
-		frame.function = function
+		closure = ObjClosure(function)
+		self.pop()
+		self.push(Value.OBJ_VAL(closure))
+		frame.closure = closure
 		frame.ip = 0
 		frame.stack = self.stack
 		frame.firstSlotInStack = 0
@@ -110,11 +113,11 @@ class VM:
 					i = 0
 					while i < len(self.stack):
 						print('[ ', end='')
-						frame.function.chunk.printValue(self.stack[i])
+						frame.closure.AS_CLOSURE().chunk.printValue(self.stack[i])
 						print(' ]', end='')
 						i += 1
 					print('')
-					frame.function.chunk.disassembleInstruction(frame.ip)
+					frame.closure.AS_CLOSURE().chunk.disassembleInstruction(frame.ip)
 			instruction = self.readByte()
 			if instruction == OpCode.OP_CONSTANT:
 				constant = self.readConstant()
@@ -232,7 +235,7 @@ class VM:
 				self.push(Value.NUMBER_VAL(-n))
 
 			if instruction == OpCode.OP_PRINT:
-				frame.function.chunk.printValue(self.pop())
+				frame.closure.AS_CLOSURE().chunk.printValue(self.pop())
 				print()
 
 			if instruction == OpCode.OP_JUMP_IF_FALSE:
@@ -254,6 +257,12 @@ class VM:
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				frame = self.frames[-1]
 
+			if instruction == OpCode.OP_CLOSURE:
+				constant = self.readConstant()
+				function = constant.AS_OBJ()
+				closure = ObjClosure(function)
+				self.push(Value.OBJ_VAL(closure))
+
 			if instruction == OpCode.OP_RETURN:
 				result = self.pop();
 				firstSlotInStack = self.frames[-1].firstSlotInStack
@@ -272,21 +281,21 @@ class VM:
 
 	def readByte(self):
 		frame = self.frames[-1]
-		b = frame.function.chunk.code[frame.ip]
+		b = frame.closure.AS_CLOSURE().chunk.code[frame.ip]
 		frame.ip += 1
 		return b
 
 	def readShort(self):
 		frame = self.frames[-1]
-		b1 = frame.function.chunk.code[frame.ip]
-		b2 = frame.function.chunk.code[frame.ip + 1]
+		b1 = frame.closure.AS_CLOSURE().chunk.code[frame.ip]
+		b2 = frame.closure.AS_CLOSURE().chunk.code[frame.ip + 1]
 		frame.ip += 2
 		return (b1 << 8) | b2
 
 	def readConstant(self):
 		n = self.readByte()
 		frame = self.frames[-1]
-		return frame.function.chunk.constants[n]
+		return frame.closure.AS_CLOSURE().chunk.constants[n]
 
 	def push(self, value):
 		self.stack.append(value)
@@ -298,15 +307,15 @@ class VM:
 		"""Peek value that is distance elements from top of stack without modifying stack"""
 		return self.stack[len(self.stack) - 1 - distance]
 
-	def call(self, function, argCount):
-		if argCount != function.arity:
-			self.runtimeError("Expected {0} arguments but got {1}.".format(function.arity, argCount))
+	def call(self, closure, argCount):
+		if argCount != closure.AS_CLOSURE().arity:
+			self.runtimeError("Expected {0} arguments but got {1}.".format(closure.AS_CLOSURE().arity, argCount))
 			return False
 		if len(self.frames) == 64:
 			self.runtimeError("Stack overflow.")
 			return False
 		frame = CallFrame()
-		frame.function = function
+		frame.closure = closure
 		frame.ip = 0
 		frame.stack = self.stack
 		# Set index of first slot in stack for this call.
@@ -316,7 +325,7 @@ class VM:
 
 	def callValue(self, callee, argCount):
 		if callee.IS_OBJ():
-			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_FUNCTION:
+			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLOSURE:
 				return self.call(callee.AS_OBJ(), argCount)
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_NATIVE:
 				native = callee.AS_OBJ().AS_NATIVE()
