@@ -264,9 +264,14 @@ class Compiler:
 			getOp = OpCode.OP_GET_LOCAL
 			setOp = OpCode.OP_SET_LOCAL
 		else:
-			arg = self.identifierConstant(name)
-			getOp = OpCode.OP_GET_GLOBAL
-			setOp = OpCode.OP_SET_GLOBAL
+			arg = self.resolveUpvalue(name)
+			if arg != -1:
+				getOp = OpCode.OP_GET_UPVALUE
+				setOp = OpCode.OP_SET_UPVALUE
+			else:
+				arg = self.identifierConstant(name)
+				getOp = OpCode.OP_GET_GLOBAL
+				setOp = OpCode.OP_SET_GLOBAL
 
 		if canAssign and self.match(TokenType.TOKEN_EQUAL):
 			self.expression()
@@ -372,6 +377,37 @@ class Compiler:
 			i = i - 1
 		return -1
 
+	def addUpvalue(self, index, isLocal):
+		i = 0
+		while i < len(self.current.function.upvalues):
+			if self.current.function.upvalues[i].index == index and self.current.function.upvalues[i].isLocal == isLocal:
+				return i
+			i += 1
+
+		if len(self.current.function.upvalues) == 256:
+			self.error("Too many closure variables in function.")
+			return 0
+
+		u = Upvalue()
+		u.isLocal = isLocal
+		u.index = index
+		self.current.function.upvalues.append(u)
+		return len(self.current.function.upvalues) - 1
+
+	def resolveUpvalue(self, name):
+		if self.enclosing == None:
+			return -1
+
+		local = self.enclosing.resolveLocal(name)
+		if local != -1:
+			return self.addUpvalue(local, True)
+
+		upvalue = self.enclosing.resolveUpvalue(name)
+		if upvalue != -1:
+			return self.addUpvalue(upvalue, False)
+
+		return -1
+
 	def addLocal(self, name):
 		if len(self.current.locals) == 256:
 			self.error("Too many local variables in function.")
@@ -465,6 +501,16 @@ class Compiler:
 		function = compiler.endCompiler()
 		value = Value.OBJ_VAL(function)
 		self.emitBytes(OpCode.OP_CLOSURE, self.makeConstant(value))
+
+		i = 0
+		while i < len(function.upvalues):
+			if function.upvalues[i].isLocal:
+				b = 1
+			else:
+				b = 0
+			self.emitByte(b)
+			self.emitByte(function.upvalues[i].index)
+			i += 1
 
 	def funDeclaration(self):
 		globalVar = self.parseVariable("Expect function name.")

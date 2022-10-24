@@ -15,10 +15,17 @@ class Obj:
 	def OBJ_TYPE(self):
 		return self.__type
 
+class Upvalue:
+	"""A value defined in an outer scope, further up the stack"""
+	def __init__(self):
+		self.index = 0
+		self.isLocal = False
+
 class ObjFunction(Obj):
 	def __init__(self, name):
 		super().__init__(ObjType.OBJ_FUNCTION)
 		self.arity = 0
+		self.upvalues = []
 		self.chunk = Chunk()
 		self.__name = name
 
@@ -95,3 +102,6 @@ class ObjClosure(Obj):
 
 	def AS_CLOSURE(self):
 		return self.__function
+
+	def printObject(self):
+		self.__function.printObject()

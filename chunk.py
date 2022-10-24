@@ -14,22 +14,24 @@ class OpCode(IntEnum):
 	OP_GET_GLOBAL = 8
 	OP_DEFINE_GLOBAL = 9
 	OP_SET_GLOBAL = 10
-	OP_EQUAL = 11
-	OP_GREATER = 12
-	OP_LESS = 13
-	OP_ADD = 14
-	OP_SUBTRACT  = 15
-	OP_MULTIPLY = 16
-	OP_DIVIDE = 17
-	OP_NOT = 18
-	OP_NEGATE = 19
-	OP_PRINT = 20
-	OP_JUMP = 21
-	OP_JUMP_IF_FALSE = 22
-	OP_LOOP = 23
-	OP_CALL = 24
-	OP_CLOSURE = 25
-	OP_RETURN = 26
+	OP_GET_UPVALUE = 11
+	OP_SET_UPVALUE = 12
+	OP_EQUAL = 13
+	OP_GREATER = 14
+	OP_LESS = 15
+	OP_ADD = 16
+	OP_SUBTRACT  = 17
+	OP_MULTIPLY = 18
+	OP_DIVIDE = 19
+	OP_NOT = 20
+	OP_NEGATE = 21
+	OP_PRINT = 22
+	OP_JUMP = 23
+	OP_JUMP_IF_FALSE = 24
+	OP_LOOP = 25
+	OP_CALL = 26
+	OP_CLOSURE = 27
+	OP_RETURN = 28
 
 
 class Chunk:
@@ -100,6 +102,12 @@ class Chunk:
 		if op == OpCode.OP_SET_GLOBAL:
 				return self.constantInstruction("OP_SET_GLOBAL", offset)
 
+		if op == OpCode.OP_GET_UPVALUE:
+				return self.byteInstruction("OP_GET_UPVALUE", offset)
+
+		if op == OpCode.OP_SET_UPVALUE:
+				return self.byteInstruction("OP_SET_UPVALUE", offset)
+
 		if op == OpCode.OP_EQUAL:
 				return self.simpleInstruction("OP_EQUAL", offset)
 
@@ -149,6 +157,19 @@ class Chunk:
 				print("{0:<16} {1:4d} '".format("OP_CLOSURE", constant), end='')
 				self.printValue(self.constants[constant])
 				print("'")
+				function = self.constants[constant].AS_OBJ()
+				j = 0
+				while j < len(function.upvalues):
+					isLocal = self.code[offset]
+					if isLocal == 1:
+						type = "local"
+					else:
+						type = "upvalue"
+					offset += 1
+					index = self.code[offset]
+					offset += 1
+					print("{0:04d}    | {1:>27} {2:d} '".format(offset - 2, type, index))
+					j += 1
 				return offset
 
 		if op == OpCode.OP_RETURN:
