@@ -166,6 +166,16 @@ class VM:
 					self.runtimeError("Undefined variable '{0}'".format(name.AS_STRING()))
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 
+			if instruction == OpCode.OP_GET_UPVALUE:
+				slot = self.readByte()
+				frame = self.frames[-1]
+				self.push(frame.closure.upvalues[slot].location)
+
+			if instruction == OpCode.OP_SET_UPVALUE:
+				slot = self.readByte()
+				frame = self.frames[-1]
+				frame.closure.upvalues[slot].location = self.peek(0)
+
 			if instruction == OpCode.OP_EQUAL:
 				b = self.pop()
 				a = self.pop()
@@ -262,6 +272,15 @@ class VM:
 				function = constant.AS_OBJ()
 				closure = ObjClosure(function)
 				self.push(Value.OBJ_VAL(closure))
+				i = 0
+				while i < len(closure.upvalues):
+					isLocal = self.readByte()
+					index = self.readByte()
+					if isLocal == 1:
+						closure.upvalues[i] = self.captureUpvalue(self.frames[-1].getSlot(index))
+					else:
+						closure.upvalues[i] = self.frames[-1].closure.upvaluues[index]
+					i += 1
 
 			if instruction == OpCode.OP_RETURN:
 				result = self.pop();
@@ -338,6 +357,9 @@ class VM:
 				return True
 		self.runtimeError("Can only call functions and classes.")
 		return False
+
+	def captureUpvalue(self, local):
+		return ObjUpvalue(local)
 
 	def isFalsey(self, value):
 		if value.IS_NIL():

@@ -7,6 +7,7 @@ class ObjType(IntEnum):
 	OBJ_FUNCTION = 1
 	OBJ_NATIVE = 2
 	OBJ_STRING = 3
+	OBJ_UPVALUE = 4
 
 class Obj:
 	def __init__(self, type):
@@ -92,10 +93,24 @@ class ObjString(Obj):
 		if self.OBJ_TYPE() == ObjType.OBJ_STRING:
 			print(self.AS_CSTRING(), end='')
 
+class ObjUpvalue(Obj):
+	def __init__(self, slot):
+		super().__init__(ObjType.OBJ_UPVALUE)
+		self.__chars = str
+		self.location = slot
+
+	def printObject(self):
+		print('upvalue', end='')
+
 class ObjClosure(Obj):
 	def __init__(self, function):
 		super().__init__(ObjType.OBJ_CLOSURE)
 		self.__function = function
+		self.upvalues = []
+		i = 0
+		while i < len(function.upvalues):
+			self.upvalues.append(None)
+			i += 1
 
 	def IS_CLOSURE(self):
 		return self.OBJ_TYPE() == ObjType.OBJ_CLOSURE
