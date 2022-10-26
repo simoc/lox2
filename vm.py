@@ -279,7 +279,7 @@ class VM:
 					if isLocal == 1:
 						closure.upvalues[i] = self.captureUpvalue(self.frames[-1].getSlot(index))
 					else:
-						closure.upvalues[i] = self.frames[-1].closure.upvaluues[index]
+						closure.upvalues[i] = self.frames[-1].closure.upvalues[index]
 					i += 1
 
 			if instruction == OpCode.OP_RETURN:
