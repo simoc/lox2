@@ -73,107 +73,107 @@ class Chunk:
 			print('{0:4d} '.format(self.lines[offset]), end='')
 		op = self.code[offset]
 		if op == OpCode.OP_CONSTANT:
-				return self.constantInstruction("OP_CONSTANT", offset)
+			return self.constantInstruction("OP_CONSTANT", offset)
 
 		if op == OpCode.OP_NIL:
-				return self.simpleInstruction("OP_NIL", offset)
+			return self.simpleInstruction("OP_NIL", offset)
 
 		if op == OpCode.OP_TRUE:
-				return self.simpleInstruction("OP_TRUE", offset)
+			return self.simpleInstruction("OP_TRUE", offset)
 
 		if op == OpCode.OP_FALSE:
-				return self.simpleInstruction("OP_FALSE", offset)
+			return self.simpleInstruction("OP_FALSE", offset)
 
 		if op == OpCode.OP_POP:
-				return self.simpleInstruction("OP_POP", offset)
+			return self.simpleInstruction("OP_POP", offset)
 
 		if op == OpCode.OP_GET_LOCAL:
-				return self.byteInstruction("OP_GET_LOCAL", offset)
+			return self.byteInstruction("OP_GET_LOCAL", offset)
 
 		if op == OpCode.OP_SET_LOCAL:
-				return self.byteInstruction("OP_SET_LOCAL", offset)
+			return self.byteInstruction("OP_SET_LOCAL", offset)
 
 		if op == OpCode.OP_GET_GLOBAL:
-				return self.constantInstruction("OP_GET_GLOBAL", offset)
+			return self.constantInstruction("OP_GET_GLOBAL", offset)
 
 		if op == OpCode.OP_DEFINE_GLOBAL:
-				return self.constantInstruction("OP_DEFINE_GLOBAL", offset)
+			return self.constantInstruction("OP_DEFINE_GLOBAL", offset)
 
 		if op == OpCode.OP_SET_GLOBAL:
-				return self.constantInstruction("OP_SET_GLOBAL", offset)
+			return self.constantInstruction("OP_SET_GLOBAL", offset)
 
 		if op == OpCode.OP_GET_UPVALUE:
-				return self.byteInstruction("OP_GET_UPVALUE", offset)
+			return self.byteInstruction("OP_GET_UPVALUE", offset)
 
 		if op == OpCode.OP_SET_UPVALUE:
-				return self.byteInstruction("OP_SET_UPVALUE", offset)
+			return self.byteInstruction("OP_SET_UPVALUE", offset)
 
 		if op == OpCode.OP_EQUAL:
-				return self.simpleInstruction("OP_EQUAL", offset)
+			return self.simpleInstruction("OP_EQUAL", offset)
 
 		if op == OpCode.OP_GREATER:
-				return self.simpleInstruction("OP_GREATER", offset)
+			return self.simpleInstruction("OP_GREATER", offset)
 
 		if op == OpCode.OP_LESS:
-				return self.simpleInstruction("OP_LESS", offset)
+			return self.simpleInstruction("OP_LESS", offset)
 
 		if op == OpCode.OP_ADD:
-				return self.simpleInstruction("OP_ADD", offset)
+			return self.simpleInstruction("OP_ADD", offset)
 
 		if op == OpCode.OP_SUBTRACT:
-				return self.simpleInstruction("OP_SUBTRACT", offset)
+			return self.simpleInstruction("OP_SUBTRACT", offset)
 
 		if op == OpCode.OP_MULTIPLY:
-				return self.simpleInstruction("OP_MULTIPLY", offset)
+			return self.simpleInstruction("OP_MULTIPLY", offset)
 
 		if op == OpCode.OP_DIVIDE:
-				return self.simpleInstruction("OP_DIVIDE", offset)
+			return self.simpleInstruction("OP_DIVIDE", offset)
 
 		if op == OpCode.OP_NOT:
-				return self.simpleInstruction("OP_NOT", offset)
+			return self.simpleInstruction("OP_NOT", offset)
 
 		if op == OpCode.OP_NEGATE:
-				return self.simpleInstruction("OP_NEGATE", offset)
+			return self.simpleInstruction("OP_NEGATE", offset)
 
 		if op == OpCode.OP_PRINT:
-				return self.simpleInstruction("OP_PRINT", offset)
+			return self.simpleInstruction("OP_PRINT", offset)
 
 		if op == OpCode.OP_JUMP:
-				return self.jumpInstruction("OP_JUMP", 1, offset)
+			return self.jumpInstruction("OP_JUMP", 1, offset)
 
 		if op == OpCode.OP_JUMP_IF_FALSE:
-				return self.jumpInstruction("OP_JUMP_IF_FALSE", 1, offset)
+			return self.jumpInstruction("OP_JUMP_IF_FALSE", 1, offset)
 
 		if op == OpCode.OP_LOOP:
-				return self.jumpInstruction("OP_LOOP", -1, offset)
+			return self.jumpInstruction("OP_LOOP", -1, offset)
 
 		if op == OpCode.OP_CALL:
-				return self.byteInstruction("OP_CALL", offset)
+			return self.byteInstruction("OP_CALL", offset)
 
 		if op == OpCode.OP_CLOSURE:
+			offset += 1
+			constant = self.code[offset]
+			offset += 1
+			print("{0:<16} {1:4d} '".format("OP_CLOSURE", constant), end='')
+			self.printValue(self.constants[constant])
+			print("'")
+			function = self.constants[constant].AS_OBJ()
+			j = 0
+			while j < len(function.upvalues):
+				isLocal = self.code[offset]
+				if isLocal == 1:
+					type = "local"
+				else:
+					type = "upvalue"
 				offset += 1
-				constant = self.code[offset]
+				index = self.code[offset]
 				offset += 1
-				print("{0:<16} {1:4d} '".format("OP_CLOSURE", constant), end='')
-				self.printValue(self.constants[constant])
-				print("'")
-				function = self.constants[constant].AS_OBJ()
-				j = 0
-				while j < len(function.upvalues):
-					isLocal = self.code[offset]
-					if isLocal == 1:
-						type = "local"
-					else:
-						type = "upvalue"
-					offset += 1
-					index = self.code[offset]
-					offset += 1
-					print("{0:04d}    | {1:>27} {2:d} '".format(offset - 2, type, index))
-					j += 1
-				return offset
+				print("{0:04d}    | {1:>27} {2:d} '".format(offset - 2, type, index))
+				j += 1
+			return offset
 
 		if op == OpCode.OP_RETURN:
-				return self.simpleInstruction("OP_RETURN", offset)
+			return self.simpleInstruction("OP_RETURN", offset)
 
 		print("Unknown opcode {0}".format(self.code[offset]))
 		return offset + 1
