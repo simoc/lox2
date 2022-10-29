@@ -31,7 +31,8 @@ class OpCode(IntEnum):
 	OP_LOOP = 25
 	OP_CALL = 26
 	OP_CLOSURE = 27
-	OP_RETURN = 28
+	OP_CLOSE_UPVALUE = 28
+	OP_RETURN = 29
 
 
 class Chunk:
@@ -171,6 +172,9 @@ class Chunk:
 				print("{0:04d}    | {1:>27} {2:d} '".format(offset - 2, type, index))
 				j += 1
 			return offset
+
+		if op == OpCode.OP_CLOSE_UPVALUE:
+			return self.simpleInstruction("OP_CLOSE_UPVALUE", offset)
 
 		if op == OpCode.OP_RETURN:
 			return self.simpleInstruction("OP_RETURN", offset)
