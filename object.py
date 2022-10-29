@@ -98,6 +98,8 @@ class ObjUpvalue(Obj):
 		super().__init__(ObjType.OBJ_UPVALUE)
 		self.__chars = str
 		self.location = slot
+		self.closed = Value.NIL_VAL()
+		self.next = None
 
 	def printObject(self):
 		print('upvalue', end='')
