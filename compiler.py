@@ -43,6 +43,7 @@ class Local:
 	def __init__(self):
 		self.name = Token()
 		self.depth = 0
+		self.isCaptured = False
 
 class FunctionType(IntEnum):
 	TYPE_FUNCTION = 0
@@ -71,6 +72,7 @@ class Compiler:
 		local.name = Token()
 		local.name.type = TokenType.TOKEN_STRING
 		local.depth = 0
+		local.isCaptured = False
 		self.current.locals.append(local)
 
 		self.scanner = Scanner()
@@ -191,7 +193,10 @@ class Compiler:
 		self.current.scopeDepth -= 1
 
 		while len(self.current.locals) > 0 and self.current.locals[-1].depth > self.current.scopeDepth:
-			self.emitByte(OpCode.OP_POP)
+			if self.current.locals[-1].isCaptured:
+				self.emitByte(OpCode.OP_CLOSE_UPVALUE)
+			else:
+				self.emitByte(OpCode.OP_POP)
 			self.current.locals.pop()
 
 	def binary(self, canAssign):
@@ -400,6 +405,7 @@ class Compiler:
 
 		local = self.enclosing.resolveLocal(name)
 		if local != -1:
+			self.enclosing.current.locals[local].isCaptured = True
 			return self.addUpvalue(local, True)
 
 		upvalue = self.enclosing.resolveUpvalue(name)
@@ -415,6 +421,7 @@ class Compiler:
 		local = Local()
 		local.name = name
 		local.depth = -1
+		local.isCaptured = False
 		self.current.locals.append(local)
 
 	def declareVariable(self):
