@@ -29,6 +29,9 @@ class InterpretResult(IntEnum):
 
 class VM:
 	"""A virtual machine for executing chunks of bytecode"""
+
+	debugTraceExecution = 0
+
 	def __init__(self):
 		self.initVm()
 
@@ -39,7 +42,6 @@ class VM:
 	def initVm(self):
 		"""Setup empty virtual machine"""
 		self.resetStack()
-		self.debugTraceExecution = 0
 		self.globals = Table()
 		self.defineNative("clock", self.clockNative)
 
