@@ -2,10 +2,10 @@ from token import *
 
 class Scanner:
 	def initScanner(self, source):
-		self.start = source;
-		self.currentIndex = 0;
-		self.startIndex = 0;
-		self.line = 1;
+		self.start = source
+		self.currentIndex = 0
+		self.startIndex = 0
+		self.line = 1
 
 	def isAtEnd(self):
 		flag = self.currentIndex >= len(self.start)

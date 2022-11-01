@@ -286,10 +286,10 @@ class VM:
 
 			if instruction == OpCode.OP_CLOSE_UPVALUE:
 				self.closeUpvalues(0)
-				self.pop();
+				self.pop()
 
 			if instruction == OpCode.OP_RETURN:
-				result = self.pop();
+				result = self.pop()
 				self.closeUpvalues(0)
 				firstSlotInStack = self.frames[-1].firstSlotInStack
 				self.frames.pop()

@@ -470,7 +470,7 @@ class Compiler:
 		return argCount
 
 	def and_(self, canAssign):
-		endJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE);
+		endJump = self.emitJump(OpCode.OP_JUMP_IF_FALSE)
 		self.emitByte(OpCode.OP_POP)
 		self.parsePrecedence(Precedence.PREC_AND)
 		self.patchJump(endJump)

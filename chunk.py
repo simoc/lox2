@@ -62,7 +62,7 @@ class Chunk:
 	def disassembleChunk(self, name):
 		"""Print human readable representation of chunk"""
 		print("===", name, "===")
-		offset = 0;
+		offset = 0
 		while offset < len(self.code):
 			offset = self.disassembleInstruction(offset)
 
