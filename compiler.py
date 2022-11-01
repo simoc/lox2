@@ -5,8 +5,6 @@ from value import *
 from object import *
 import sys
 
-DEBUG_PRINT_CODE = 1
-
 class Parser:
 	def __init__(self):
 		self.current = Token()
@@ -58,6 +56,8 @@ class CompilerState:
 
 class Compiler:
 	"""Compiles source code"""
+
+	DEBUG_PRINT_CODE = 0
 
 	def __init__(self, compiler, type):
 		self.enclosing = compiler
@@ -177,7 +177,7 @@ class Compiler:
 	def endCompiler(self):
 		self.emitReturn()
 		function = self.current.function
-		if DEBUG_PRINT_CODE == 1:
+		if self.DEBUG_PRINT_CODE == 1:
 			if not self.parser.hadError:
 				if function.getName() != None:
 					name = function.getName().AS_STRING()
