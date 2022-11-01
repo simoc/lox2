@@ -284,8 +284,13 @@ class VM:
 						closure.upvalues[i] = self.frames[-1].closure.upvalues[index]
 					i += 1
 
+			if instruction == OpCode.OP_CLOSE_UPVALUE:
+				self.closeUpvalues(0)
+				self.pop();
+
 			if instruction == OpCode.OP_RETURN:
 				result = self.pop();
+				self.closeUpvalues(0)
 				firstSlotInStack = self.frames[-1].firstSlotInStack
 				self.frames.pop()
 				if len(self.frames) == 0:
@@ -362,6 +367,10 @@ class VM:
 
 	def captureUpvalue(self, local):
 		return ObjUpvalue(local)
+
+	def closeUpvalues(self, last):
+		#TODO understand and implement 25.4.3 and 25.4.4 logic
+		pass
 
 	def isFalsey(self, value):
 		if value.IS_NIL():
