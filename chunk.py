@@ -33,6 +33,7 @@ class OpCode(IntEnum):
 	OP_CLOSURE = 27
 	OP_CLOSE_UPVALUE = 28
 	OP_RETURN = 29
+	OP_CLASS = 30
 
 
 class Chunk:
@@ -178,6 +179,9 @@ class Chunk:
 
 		if op == OpCode.OP_RETURN:
 			return self.simpleInstruction("OP_RETURN", offset)
+
+		if op == OpCode.OP_CLASS:
+			return self.constantInstruction("OP_CLASS", offset)
 
 		print("Unknown opcode {0}".format(self.code[offset]))
 		return offset + 1

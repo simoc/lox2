@@ -305,6 +305,10 @@ class VM:
 				self.push(result)
 				frame = self.frames[-1]
 
+			if instruction == OpCode.OP_CLASS:
+				name = self.readString()
+				self.push(Value.OBJ_VAL(ObjClass(name)))
+
 	def readByte(self):
 		frame = self.frames[-1]
 		b = frame.closure.AS_CLOSURE().chunk.code[frame.ip]
@@ -322,6 +326,9 @@ class VM:
 		n = self.readByte()
 		frame = self.frames[-1]
 		return frame.closure.AS_CLOSURE().chunk.constants[n]
+
+	def readString(self):
+		return self.readConstant().AS_OBJ()
 
 	def push(self, value):
 		self.stack.append(value)

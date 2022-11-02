@@ -3,11 +3,12 @@ from value import *
 from chunk import *
 
 class ObjType(IntEnum):
-	OBJ_CLOSURE = 0
-	OBJ_FUNCTION = 1
-	OBJ_NATIVE = 2
-	OBJ_STRING = 3
-	OBJ_UPVALUE = 4
+	OBJ_CLASS = 0
+	OBJ_CLOSURE = 1
+	OBJ_FUNCTION = 2
+	OBJ_NATIVE = 3
+	OBJ_STRING = 4
+	OBJ_UPVALUE = 5
 
 class Obj:
 	def __init__(self, type):
@@ -122,3 +123,15 @@ class ObjClosure(Obj):
 
 	def printObject(self):
 		self.__function.printObject()
+
+class ObjClass(Obj):
+	def __init__(self, name):
+		super().__init__(ObjType.OBJ_CLASS)
+		self.__name = name
+
+	def IS_CLASS(self):
+		return self.OBJ_TYPE() == ObjType.OBJ_CLASS
+
+	def printObject(self):
+		if self.OBJ_TYPE() == ObjType.OBJ_CLASS:
+			self.__name.printObject()

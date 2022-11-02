@@ -519,6 +519,17 @@ class Compiler:
 			self.emitByte(function.upvalues[i].index)
 			i += 1
 
+	def classDeclaration(self):
+		self.consume(TokenType.TOKEN_IDENTIFIER, "Expect class name.")
+		nameConstant = self.identifierConstant(self.parser.previous)
+		self.declareVariable()
+
+		self.emitBytes(OpCode.OP_CLASS, nameConstant)
+		self.defineVariable(nameConstant)
+
+		self.consume(TokenType.TOKEN_LEFT_BRACE, "Expect '{' before class body.")
+		self.consume(TokenType.TOKEN_RIGHT_BRACE, "Expect '}' after class body.")
+
 	def funDeclaration(self):
 		globalVar = self.parseVariable("Expect function name.")
 		self.markInitialized()
@@ -639,7 +650,9 @@ class Compiler:
 			self.advance()
 
 	def declaration(self):
-		if self.match(TokenType.TOKEN_FUN):
+		if self.match(TokenType.TOKEN_CLASS):
+			self.classDeclaration()
+		elif self.match(TokenType.TOKEN_FUN):
 			self.funDeclaration()
 		elif self.match(TokenType.TOKEN_VAR):
 			self.varDeclaration()
