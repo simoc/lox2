@@ -358,6 +358,11 @@ class VM:
 
 	def callValue(self, callee, argCount):
 		if callee.IS_OBJ():
+			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLASS:
+				klass = callee.AS_OBJ()
+				frame = self.frames[-1]
+				frame.setSlot(-(argCount + 1), Value.OBJ_VAL(ObjInstance(klass)))
+				return True
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLOSURE:
 				return self.call(callee.AS_OBJ(), argCount)
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_NATIVE:

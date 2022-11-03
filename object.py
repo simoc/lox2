@@ -1,14 +1,16 @@
 from enum import IntEnum
 from value import *
 from chunk import *
+from table import *
 
 class ObjType(IntEnum):
 	OBJ_CLASS = 0
 	OBJ_CLOSURE = 1
 	OBJ_FUNCTION = 2
-	OBJ_NATIVE = 3
-	OBJ_STRING = 4
-	OBJ_UPVALUE = 5
+	OBJ_INSTANCE = 3
+	OBJ_NATIVE = 4
+	OBJ_STRING = 5
+	OBJ_UPVALUE = 6
 
 class Obj:
 	def __init__(self, type):
@@ -135,3 +137,17 @@ class ObjClass(Obj):
 	def printObject(self):
 		if self.OBJ_TYPE() == ObjType.OBJ_CLASS:
 			self.__name.printObject()
+
+class ObjInstance(Obj):
+	def __init__(self, klass):
+		super().__init__(ObjType.OBJ_INSTANCE)
+		self.__klass = klass
+		self.__fields = Table()
+
+	def IS_INSTANCE(self):
+		return self.OBJ_TYPE() == ObjType.OBJ_INSTANCE
+
+	def printObject(self):
+		if self.OBJ_TYPE() == ObjType.OBJ_INSTANCE:
+			self.__klass.printObject()
+			print(' instance', end='')
