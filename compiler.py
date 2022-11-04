@@ -232,6 +232,15 @@ class Compiler:
 		argCount = self.argumentList()
 		self.emitBytes(OpCode.OP_CALL, argCount)
 
+	def dot(self, canAssign):
+		self.consume(TokenType.TOKEN_IDENTIFIER, "Expect property name after '.'.")
+		name = self.identifierConstant(self.parser.previous)
+		if canAssign and self.match(TokenType.TOKEN_EQUAL):
+			self.expression()
+			self.emitBytes(OpCode.OP_SET_PROPERTY, name)
+		else:
+			self.emitBytes(OpCode.OP_GET_PROPERTY, name)
+
 	def literal(self, canAssign):
 		operatorType = self.parser.previous.type
 		if operatorType == TokenType.TOKEN_FALSE:
@@ -309,7 +318,7 @@ class Compiler:
 			TokenType.TOKEN_LEFT_BRACE:     ParseRule(None, None, Precedence.PREC_NONE),
 			TokenType.TOKEN_RIGHT_BRACE:    ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_COMMA:          ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_DOT:            ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_DOT:            ParseRule(None,     self.dot, Precedence.PREC_CALL),
 			TokenType.TOKEN_MINUS:          ParseRule(self.unary, self.binary, Precedence.PREC_TERM),
 			TokenType.TOKEN_PLUS:           ParseRule(None,     self.binary, Precedence.PREC_TERM),
 			TokenType.TOKEN_SEMICOLON:      ParseRule(None,     None,   Precedence.PREC_NONE),
