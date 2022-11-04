@@ -16,24 +16,26 @@ class OpCode(IntEnum):
 	OP_SET_GLOBAL = 10
 	OP_GET_UPVALUE = 11
 	OP_SET_UPVALUE = 12
-	OP_EQUAL = 13
-	OP_GREATER = 14
-	OP_LESS = 15
-	OP_ADD = 16
-	OP_SUBTRACT  = 17
-	OP_MULTIPLY = 18
-	OP_DIVIDE = 19
-	OP_NOT = 20
-	OP_NEGATE = 21
-	OP_PRINT = 22
-	OP_JUMP = 23
-	OP_JUMP_IF_FALSE = 24
-	OP_LOOP = 25
-	OP_CALL = 26
-	OP_CLOSURE = 27
-	OP_CLOSE_UPVALUE = 28
-	OP_RETURN = 29
-	OP_CLASS = 30
+	OP_GET_PROPERTY = 13
+	OP_SET_PROPERTY = 14
+	OP_EQUAL = 15
+	OP_GREATER = 16
+	OP_LESS = 17
+	OP_ADD = 18
+	OP_SUBTRACT  = 19
+	OP_MULTIPLY = 20
+	OP_DIVIDE = 21
+	OP_NOT = 22
+	OP_NEGATE = 23
+	OP_PRINT = 24
+	OP_JUMP = 25
+	OP_JUMP_IF_FALSE = 26
+	OP_LOOP = 27
+	OP_CALL = 28
+	OP_CLOSURE = 29
+	OP_CLOSE_UPVALUE = 30
+	OP_RETURN = 31
+	OP_CLASS = 32
 
 
 class Chunk:
@@ -109,6 +111,12 @@ class Chunk:
 
 		if op == OpCode.OP_SET_UPVALUE:
 			return self.byteInstruction("OP_SET_UPVALUE", offset)
+
+		if op == OpCode.OP_GET_PROPERTY:
+			return self.constantInstruction("OP_GET_PROPERTY", offset)
+
+		if op == OpCode.OP_SET_PROPERTY:
+			return self.constantInstruction("OP_SET_PROPERTY", offset)
 
 		if op == OpCode.OP_EQUAL:
 			return self.simpleInstruction("OP_EQUAL", offset)
