@@ -528,16 +528,29 @@ class Compiler:
 			self.emitByte(function.upvalues[i].index)
 			i += 1
 
+	def method(self):
+		self.consume(TokenType.TOKEN_IDENTIFIER, "Expect method name.")
+		constant = self.identifierConstant(self.parser.previous)
+		type = FunctionType.TYPE_FUNCTION
+		self.function(type)
+		self.emitBytes(OpCode.OP_METHOD, constant)
+
 	def classDeclaration(self):
 		self.consume(TokenType.TOKEN_IDENTIFIER, "Expect class name.")
+		className = self.parser.previous
 		nameConstant = self.identifierConstant(self.parser.previous)
 		self.declareVariable()
 
 		self.emitBytes(OpCode.OP_CLASS, nameConstant)
 		self.defineVariable(nameConstant)
+		self.namedVariable(className, False)
 
 		self.consume(TokenType.TOKEN_LEFT_BRACE, "Expect '{' before class body.")
+		while (not self.check(TokenType.TOKEN_RIGHT_BRACE) and
+			not self.check(TokenType.TOKEN_RIGHT_BRACE)):
+			self.method()
 		self.consume(TokenType.TOKEN_RIGHT_BRACE, "Expect '}' after class body.")
+		self.emitByte(OpCode.OP_POP)
 
 	def funDeclaration(self):
 		globalVar = self.parseVariable("Expect function name.")

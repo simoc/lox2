@@ -337,6 +337,10 @@ class VM:
 				name = self.readString()
 				self.push(Value.OBJ_VAL(ObjClass(name)))
 
+			if instruction == OpCode.OP_METHOD:
+				name = self.readString()
+				self.defineMethod(name)
+
 	def readByte(self):
 		frame = self.frames[-1]
 		b = frame.closure.AS_CLOSURE().chunk.code[frame.ip]
@@ -411,6 +415,12 @@ class VM:
 	def closeUpvalues(self, last):
 		#TODO understand and implement 25.4.3 and 25.4.4 logic
 		pass
+
+	def defineMethod(self, name):
+		method = self.peek(0)
+		klass = self.peek(1).AS_OBJ()
+		klass.methods.set(name, method)
+		self.pop()
 
 	def isFalsey(self, value):
 		if value.IS_NIL():

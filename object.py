@@ -130,6 +130,7 @@ class ObjClass(Obj):
 	def __init__(self, name):
 		super().__init__(ObjType.OBJ_CLASS)
 		self.__name = name
+		self.methods = Table()
 
 	def IS_CLASS(self):
 		return self.OBJ_TYPE() == ObjType.OBJ_CLASS
@@ -142,7 +143,7 @@ class ObjInstance(Obj):
 	def __init__(self, klass):
 		super().__init__(ObjType.OBJ_INSTANCE)
 		self.__klass = klass
-		self.__fields = Table()
+		self.fields = Table()
 
 	def IS_INSTANCE(self):
 		return self.OBJ_TYPE() == ObjType.OBJ_INSTANCE
