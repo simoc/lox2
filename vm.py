@@ -178,6 +178,34 @@ class VM:
 				frame = self.frames[-1]
 				frame.closure.upvalues[slot].location = self.peek(0)
 
+			if instruction == OpCode.OP_GET_PROPERTY:
+				if self.peek(0).AS_OBJ().OBJ_TYPE() != ObjType.OBJ_INSTANCE:
+					self.runtimeError("Only instances have properties.")
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+
+				instance = self.peek(0).AS_OBJ()
+				name = self.readString()
+				value = instance.fields.get(name)
+				if value != None:
+					self.pop()
+					self.push(value)
+				else:
+					self.runtimeError("Undefined property '{0}'.".format(name.AS_STRING()))
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+
+			if instruction == OpCode.OP_SET_PROPERTY:
+				if self.peek(1).AS_OBJ().OBJ_TYPE() != ObjType.OBJ_INSTANCE:
+					self.runtimeError("Only instances have fields.")
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+
+				instance = self.peek(1).AS_OBJ()
+				key = self.readString()
+				value = self.peek(0)
+				instance.fields.set(key, value)
+				self.pop()
+				self.pop()
+				self.push(value)
+
 			if instruction == OpCode.OP_EQUAL:
 				b = self.pop()
 				a = self.pop()
