@@ -189,8 +189,7 @@ class VM:
 				if value != None:
 					self.pop()
 					self.push(value)
-				else:
-					self.runtimeError("Undefined property '{0}'.".format(name.AS_STRING()))
+				elif not self.bindMethod(instance.klass, name):
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 
 			if instruction == OpCode.OP_SET_PROPERTY:
@@ -390,6 +389,9 @@ class VM:
 
 	def callValue(self, callee, argCount):
 		if callee.IS_OBJ():
+			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_BOUND_METHOD:
+				bound = callee.AS_OBJ()
+				return self.call(bound.method, argCount)
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLASS:
 				klass = callee.AS_OBJ()
 				frame = self.frames[-1]
@@ -409,6 +411,16 @@ class VM:
 		self.runtimeError("Can only call functions and classes.")
 		return False
 
+	def bindMethod(self, klass, name):
+		method = klass.methods.get(name)
+		if method == None:
+			self.runtimeError("Undefined property '{0}'.".format(name.AS_STRING()))
+			return False
+		bound = ObjBoundMethod(self.peek(0), method)
+		self.pop()
+		self.push(Value.OBJ_VAL(bound))
+		return True
+
 	def captureUpvalue(self, local):
 		return ObjUpvalue(local)
 
@@ -417,7 +429,7 @@ class VM:
 		pass
 
 	def defineMethod(self, name):
-		method = self.peek(0)
+		method = self.peek(0).AS_OBJ()
 		klass = self.peek(1).AS_OBJ()
 		klass.methods.set(name, method)
 		self.pop()

@@ -4,13 +4,14 @@ from chunk import *
 from table import *
 
 class ObjType(IntEnum):
-	OBJ_CLASS = 0
-	OBJ_CLOSURE = 1
-	OBJ_FUNCTION = 2
-	OBJ_INSTANCE = 3
-	OBJ_NATIVE = 4
-	OBJ_STRING = 5
-	OBJ_UPVALUE = 6
+	OBJ_BOUND_METHOD = 0
+	OBJ_CLASS = 1
+	OBJ_CLOSURE = 2
+	OBJ_FUNCTION = 3
+	OBJ_INSTANCE = 4
+	OBJ_NATIVE = 5
+	OBJ_STRING = 6
+	OBJ_UPVALUE = 7
 
 class Obj:
 	def __init__(self, type):
@@ -142,7 +143,7 @@ class ObjClass(Obj):
 class ObjInstance(Obj):
 	def __init__(self, klass):
 		super().__init__(ObjType.OBJ_INSTANCE)
-		self.__klass = klass
+		self.klass = klass
 		self.fields = Table()
 
 	def IS_INSTANCE(self):
@@ -150,5 +151,18 @@ class ObjInstance(Obj):
 
 	def printObject(self):
 		if self.OBJ_TYPE() == ObjType.OBJ_INSTANCE:
-			self.__klass.printObject()
+			self.klass.printObject()
 			print(' instance', end='')
+
+class ObjBoundMethod(Obj):
+	def __init__(self, receiver, method):
+		super().__init__(ObjType.OBJ_BOUND_METHOD)
+		self.receiver = receiver
+		self.method = method
+
+	def IS_BOUND_METHOD(self):
+		return self.OBJ_TYPE() == ObjType.OBJ_BOUND_METHOD
+
+	def printObject(self):
+		if self.OBJ_TYPE() == ObjType.OBJ_BOUND_METHOD:
+			self.method.printObject()
