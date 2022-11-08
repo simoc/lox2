@@ -391,6 +391,8 @@ class VM:
 		if callee.IS_OBJ():
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_BOUND_METHOD:
 				bound = callee.AS_OBJ()
+				frame = self.frames[-1]
+				frame.setSlot(-(argCount + 1), Value.OBJ_VAL(bound.receiver))
 				return self.call(bound.method, argCount)
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLASS:
 				klass = callee.AS_OBJ()
@@ -416,7 +418,7 @@ class VM:
 		if method == None:
 			self.runtimeError("Undefined property '{0}'.".format(name.AS_STRING()))
 			return False
-		bound = ObjBoundMethod(self.peek(0), method)
+		bound = ObjBoundMethod(self.peek(0).AS_OBJ(), method)
 		self.pop()
 		self.push(Value.OBJ_VAL(bound))
 		return True

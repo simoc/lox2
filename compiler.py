@@ -45,7 +45,8 @@ class Local:
 
 class FunctionType(IntEnum):
 	TYPE_FUNCTION = 0
-	TYPE_SCRIPT = 1
+	TYPE_METHOD = 1
+	TYPE_SCRIPT = 2
 
 class CompilerState:
 	def __init__(self, type):
@@ -61,6 +62,10 @@ class Compiler:
 
 	def __init__(self, compiler, type):
 		self.enclosing = compiler
+		if compiler != None:
+			self.currentClass = compiler.currentClass
+		else:
+			self.currentClass = None
 		self.start = ""
 		self.line = 1
 		self.parser = Parser()
@@ -73,6 +78,10 @@ class Compiler:
 		local.name.type = TokenType.TOKEN_STRING
 		local.depth = 0
 		local.isCaptured = False
+		if type != FunctionType.TYPE_FUNCTION:
+			local.name.start = "this"
+		else:
+			local.name.start = ""
 		self.current.locals.append(local)
 
 		self.scanner = Scanner()
@@ -296,6 +305,12 @@ class Compiler:
 	def variable(self, canAssign):
 		self.namedVariable(self.parser.previous, canAssign)
 
+	def this_(self, canAssign):
+		if self.currentClass == None:
+			self.error("Can't use 'this' outside of a class.")
+			return
+		self.variable(False)
+
 	def unary(self, canAssign):
 		operatorType = self.parser.previous.type
 
@@ -347,7 +362,7 @@ class Compiler:
 			TokenType.TOKEN_PRINT:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_RETURN:         ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_SUPER:          ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_THIS:           ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_THIS:           ParseRule(self.this_,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_TRUE:           ParseRule(self.literal,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_VAR:            ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_WHILE:          ParseRule(None,     None,   Precedence.PREC_NONE),
@@ -531,7 +546,7 @@ class Compiler:
 	def method(self):
 		self.consume(TokenType.TOKEN_IDENTIFIER, "Expect method name.")
 		constant = self.identifierConstant(self.parser.previous)
-		type = FunctionType.TYPE_FUNCTION
+		type = FunctionType.TYPE_METHOD
 		self.function(type)
 		self.emitBytes(OpCode.OP_METHOD, constant)
 
@@ -543,6 +558,8 @@ class Compiler:
 
 		self.emitBytes(OpCode.OP_CLASS, nameConstant)
 		self.defineVariable(nameConstant)
+		enclosingCurrentClass = self.currentClass
+		self.currentClass = self
 		self.namedVariable(className, False)
 
 		self.consume(TokenType.TOKEN_LEFT_BRACE, "Expect '{' before class body.")
@@ -551,6 +568,7 @@ class Compiler:
 			self.method()
 		self.consume(TokenType.TOKEN_RIGHT_BRACE, "Expect '}' after class body.")
 		self.emitByte(OpCode.OP_POP)
+		self.currentClass = enclosingCurrentClass
 
 	def funDeclaration(self):
 		globalVar = self.parseVariable("Expect function name.")
