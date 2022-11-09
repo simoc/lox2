@@ -45,8 +45,9 @@ class Local:
 
 class FunctionType(IntEnum):
 	TYPE_FUNCTION = 0
-	TYPE_METHOD = 1
-	TYPE_SCRIPT = 2
+	TYPE_INITIALIZER = 1
+	TYPE_METHOD = 2
+	TYPE_SCRIPT = 3
 
 class CompilerState:
 	def __init__(self, type):
@@ -162,7 +163,10 @@ class Compiler:
 		return len(self.currentChunk().code) - 2
 
 	def emitReturn(self):
-		self.emitByte(OpCode.OP_NIL)
+		if self.current.type == FunctionType.TYPE_INITIALIZER:
+			self.emitBytes(OpCode.OP_GET_LOCAL, 0)
+		else:
+			self.emitByte(OpCode.OP_NIL)
 		self.emitByte(OpCode.OP_RETURN)
 
 	def makeConstant(self, value):
@@ -547,6 +551,8 @@ class Compiler:
 		self.consume(TokenType.TOKEN_IDENTIFIER, "Expect method name.")
 		constant = self.identifierConstant(self.parser.previous)
 		type = FunctionType.TYPE_METHOD
+		if self.parser.previous.start == "init":
+			type = FunctionType.TYPE_INITIALIZER
 		self.function(type)
 		self.emitBytes(OpCode.OP_METHOD, constant)
 
@@ -656,6 +662,9 @@ class Compiler:
 		if self.match(TokenType.TOKEN_SEMICOLON):
 			self.emitByte(OpCode.OP_RETURN)
 		else:
+			if self.current.type == FunctionType.TYPE_INITIALIZER:
+				self.error("Can't return a value from an initializer.")
+
 			self.expression()
 			self.consume(TokenType.TOKEN_SEMICOLON, "Expect ';' after return value.")
 			self.emitByte(OpCode.OP_RETURN)

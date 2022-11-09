@@ -43,6 +43,7 @@ class VM:
 		"""Setup empty virtual machine"""
 		self.resetStack()
 		self.globals = Table()
+		self.initString = "init"
 		self.defineNative("clock", self.clockNative)
 
 	def resetStack(self):
@@ -398,6 +399,12 @@ class VM:
 				klass = callee.AS_OBJ()
 				frame = self.frames[-1]
 				frame.setSlot(-(argCount + 1), Value.OBJ_VAL(ObjInstance(klass)))
+				initializer = klass.methods.get(ObjString(self.initString))
+				if initializer != None:
+					return self.call(initializer, argCount)
+				elif argCount != 0:
+					self.runtimeError("Expected 0 arguments but got {0}.".format(argCount))
+					return False
 				return True
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLOSURE:
 				return self.call(callee.AS_OBJ(), argCount)
