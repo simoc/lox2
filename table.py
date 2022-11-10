@@ -8,7 +8,7 @@ class Table:
 
 	def addAll(self, fromTable):
 		for k in fromTable.__entries.keys():
-			self.__entries[k] = fromTable[k]
+			self.__entries[k] = fromTable.__entries[k]
 
 	def get(self, key):
 		if key in self.__entries:

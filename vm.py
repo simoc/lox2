@@ -344,6 +344,17 @@ class VM:
 				name = self.readString()
 				self.push(Value.OBJ_VAL(ObjClass(name)))
 
+			if instruction == OpCode.OP_INHERIT:
+				superclass = self.peek(1).AS_OBJ()
+
+				if superclass.OBJ_TYPE() != ObjType.OBJ_CLASS:
+					self.runtimeError("Superclass must be a class.")
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+
+				subclass = self.peek(0).AS_OBJ()
+				subclass.methods.addAll(superclass.methods)
+				self.pop() # Subclass.
+
 			if instruction == OpCode.OP_METHOD:
 				name = self.readString()
 				self.defineMethod(name)

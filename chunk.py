@@ -37,7 +37,8 @@ class OpCode(IntEnum):
 	OP_CLOSE_UPVALUE = 31
 	OP_RETURN = 32
 	OP_CLASS = 33
-	OP_METHOD = 34
+	OP_INHERIT = 34
+	OP_METHOD = 35
 
 
 class Chunk:
@@ -195,6 +196,9 @@ class Chunk:
 
 		if op == OpCode.OP_CLASS:
 			return self.constantInstruction("OP_CLASS", offset)
+
+		if op == OpCode.OP_INHERIT:
+			return self.simpleInstruction("OP_INHERIT", offset)
 
 		if op == OpCode.OP_METHOD:
 			return self.constantInstruction("OP_METHOD", offset)

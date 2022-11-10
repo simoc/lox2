@@ -570,6 +570,17 @@ class Compiler:
 		self.defineVariable(nameConstant)
 		enclosingCurrentClass = self.currentClass
 		self.currentClass = self
+
+		if self.match(TokenType.TOKEN_LESS):
+			self.consume(TokenType.TOKEN_IDENTIFIER, "Expect superclass name.")
+			self.variable(False)
+
+			if self.identifiersEqual(className, self.parser.previous):
+				self.error("A class can't inherit from itself.")
+
+			self.namedVariable(className, False)
+			self.emitByte(OpCode.OP_INHERIT)
+
 		self.namedVariable(className, False)
 
 		self.consume(TokenType.TOKEN_LEFT_BRACE, "Expect '{' before class body.")
