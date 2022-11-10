@@ -18,27 +18,29 @@ class OpCode(IntEnum):
 	OP_SET_UPVALUE = 12
 	OP_GET_PROPERTY = 13
 	OP_SET_PROPERTY = 14
-	OP_EQUAL = 15
-	OP_GREATER = 16
-	OP_LESS = 17
-	OP_ADD = 18
-	OP_SUBTRACT  = 19
-	OP_MULTIPLY = 20
-	OP_DIVIDE = 21
-	OP_NOT = 22
-	OP_NEGATE = 23
-	OP_PRINT = 24
-	OP_JUMP = 25
-	OP_JUMP_IF_FALSE = 26
-	OP_LOOP = 27
-	OP_CALL = 28
-	OP_INVOKE = 29
-	OP_CLOSURE = 30
-	OP_CLOSE_UPVALUE = 31
-	OP_RETURN = 32
-	OP_CLASS = 33
-	OP_INHERIT = 34
-	OP_METHOD = 35
+	OP_GET_SUPER = 15
+	OP_EQUAL = 16
+	OP_GREATER = 17
+	OP_LESS = 18
+	OP_ADD = 19
+	OP_SUBTRACT  = 20
+	OP_MULTIPLY = 21
+	OP_DIVIDE = 22
+	OP_NOT = 23
+	OP_NEGATE = 24
+	OP_PRINT = 25
+	OP_JUMP = 26
+	OP_JUMP_IF_FALSE = 27
+	OP_LOOP = 28
+	OP_CALL = 29
+	OP_INVOKE = 30
+	OP_SUPER_INVOKE = 31
+	OP_CLOSURE = 32
+	OP_CLOSE_UPVALUE = 33
+	OP_RETURN = 34
+	OP_CLASS = 35
+	OP_INHERIT = 36
+	OP_METHOD = 37
 
 
 class Chunk:
@@ -121,6 +123,9 @@ class Chunk:
 		if op == OpCode.OP_SET_PROPERTY:
 			return self.constantInstruction("OP_SET_PROPERTY", offset)
 
+		if op == OpCode.OP_GET_SUPER:
+			return self.constantInstruction("OP_GET_SUPER", offset)
+
 		if op == OpCode.OP_EQUAL:
 			return self.simpleInstruction("OP_EQUAL", offset)
 
@@ -165,6 +170,9 @@ class Chunk:
 
 		if op == OpCode.OP_INVOKE:
 			return self.invokeInstruction("OP_INVOKE", offset)
+
+		if op == OpCode.OP_SUPER_INVOKE:
+			return self.invokeInstruction("OP_SUPER_INVOKE", offset)
 
 		if op == OpCode.OP_CLOSURE:
 			offset += 1
