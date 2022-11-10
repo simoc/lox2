@@ -297,6 +297,13 @@ class VM:
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				frame = self.frames[-1]
 
+			if instruction == OpCode.OP_INVOKE:
+				method = self.readString()
+				argCount = self.readByte()
+				if not self.invoke(method, argCount):
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+				frame = self.frames[-1]
+
 			if instruction == OpCode.OP_CLOSURE:
 				constant = self.readConstant()
 				function = constant.AS_OBJ()
@@ -419,6 +426,27 @@ class VM:
 				return True
 		self.runtimeError("Can only call functions and classes.")
 		return False
+
+	def invokeFromClass(self, klass, name, argCount):
+		method = klass.methods.get(name)
+		if method == None:
+			self.runtimeError("Undefined property '{0}'.".format(name.AS_STRING()))
+			return False
+		return self.call(method, argCount)
+
+	def invoke(self, name, argCount):
+		receiver = self.peek(argCount)
+		if not receiver.AS_OBJ().IS_INSTANCE():
+			self.runtimeError("Only instances have methods.")
+			return False
+
+		instance = receiver.AS_OBJ()
+		value = instance.fields.get(name)
+		if value != None:
+			frame.setSlot(-(argCount + 1), value)
+			return self.callValue(value, argCount)
+
+		return self.invokeFromClass(instance.klass, name, argCount)
 
 	def bindMethod(self, klass, name):
 		method = klass.methods.get(name)

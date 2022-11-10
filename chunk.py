@@ -32,11 +32,12 @@ class OpCode(IntEnum):
 	OP_JUMP_IF_FALSE = 26
 	OP_LOOP = 27
 	OP_CALL = 28
-	OP_CLOSURE = 29
-	OP_CLOSE_UPVALUE = 30
-	OP_RETURN = 31
-	OP_CLASS = 32
-	OP_METHOD = 33
+	OP_INVOKE = 29
+	OP_CLOSURE = 30
+	OP_CLOSE_UPVALUE = 31
+	OP_RETURN = 32
+	OP_CLASS = 33
+	OP_METHOD = 34
 
 
 class Chunk:
@@ -161,6 +162,9 @@ class Chunk:
 		if op == OpCode.OP_CALL:
 			return self.byteInstruction("OP_CALL", offset)
 
+		if op == OpCode.OP_INVOKE:
+			return self.invokeInstruction("OP_INVOKE", offset)
+
 		if op == OpCode.OP_CLOSURE:
 			offset += 1
 			constant = self.code[offset]
@@ -204,6 +208,14 @@ class Chunk:
 		self.printValue(self.constants[constant])
 		print("'")
 		return offset + 2
+
+	def invokeInstruction(self, name, offset):
+		constant = self.code[offset + 1]
+		argCount = self.code[offset + 2]
+		print("{0:<16} ({1:d} args) {2:4d} '".format(name, argCount, constant), end='')
+		self.printValue(self.constants[constant])
+		print("'")
+		return offset + 3
 
 	def printValue(self, value):
 		if value.IS_BOOL():

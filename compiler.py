@@ -251,6 +251,10 @@ class Compiler:
 		if canAssign and self.match(TokenType.TOKEN_EQUAL):
 			self.expression()
 			self.emitBytes(OpCode.OP_SET_PROPERTY, name)
+		elif self.match(TokenType.TOKEN_LEFT_PAREN):
+			argCount = self.argumentList()
+			self.emitBytes(OpCode.OP_INVOKE, name)
+			self.emitByte(argCount)
 		else:
 			self.emitBytes(OpCode.OP_GET_PROPERTY, name)
 
