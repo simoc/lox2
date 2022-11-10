@@ -313,6 +313,11 @@ class Compiler:
 	def variable(self, canAssign):
 		self.namedVariable(self.parser.previous, canAssign)
 
+	def syntheticToken(self, text):
+		token = Token()
+		token.start = text
+		return token
+
 	def this_(self, canAssign):
 		if self.currentClass == None:
 			self.error("Can't use 'this' outside of a class.")
@@ -569,6 +574,7 @@ class Compiler:
 		self.emitBytes(OpCode.OP_CLASS, nameConstant)
 		self.defineVariable(nameConstant)
 		enclosingCurrentClass = self.currentClass
+		hasSuperclass = False
 		self.currentClass = self
 
 		if self.match(TokenType.TOKEN_LESS):
@@ -578,8 +584,13 @@ class Compiler:
 			if self.identifiersEqual(className, self.parser.previous):
 				self.error("A class can't inherit from itself.")
 
+			self.beginScope()
+			self.addLocal(self.syntheticToken("super"))
+			self.defineVariable(0)
+
 			self.namedVariable(className, False)
 			self.emitByte(OpCode.OP_INHERIT)
+			hasSuperclass = True
 
 		self.namedVariable(className, False)
 
@@ -589,6 +600,10 @@ class Compiler:
 			self.method()
 		self.consume(TokenType.TOKEN_RIGHT_BRACE, "Expect '}' after class body.")
 		self.emitByte(OpCode.OP_POP)
+
+		if hasSuperclass:
+			self.endScope()
+
 		self.currentClass = enclosingCurrentClass
 
 	def funDeclaration(self):
