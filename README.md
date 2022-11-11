@@ -5,7 +5,13 @@ Lox compiler and virtual machine from Chapters 14-30 of the http://www.craftingi
 This implementation is in Python instead of C, but uses the same function
 names and logic.
 
-Currently, Chapters 14-24 are implemented.
+Currently, Chapters 14-29 are implemented.
+
+Chapter 30 is not implemented, because these optimizations
+are specific to the C language.
+
+Hash Tables for Chapter 20 are also not implemented and
+Python dictionaries are used instead.
 
 ## Usage
 
@@ -20,7 +26,7 @@ while (i < 5)
 }
 print "end";
 
-$ python3 main.py chapter23.lox
+$ python3 main.py --debug-print-code chapter23.lox
 === <script> ===
 0000    1 OP_CONSTANT         0 'begin'
 0002    | OP_PRINT
@@ -52,35 +58,20 @@ begin
 4
 end
 
-$ cat chapter24.5.1.lox
-fun sum(a, b, c) {
-  return a + b + c;
+$ cat fib.lox
+fun fib(n) {
+ if (n < 2) return n;
+ return fib(n - 2) + fib(n - 1);
 }
 
-print 4 + sum(5, 6, 7);
+var start = clock();
+print fib(25);
+var elapsed = clock() - start;
+print "elapsed seconds:";
+print elapsed;
 
-$ python3 main.py chapter24.5.1.lox
-=== sum ===
-0000    2 OP_GET_LOCAL        1
-0002    | OP_GET_LOCAL        2
-0004    | OP_ADD
-0005    | OP_GET_LOCAL        3
-0007    | OP_ADD
-0008    | OP_RETURN
-0009    3 OP_NIL
-0010    | OP_RETURN
-=== <script> ===
-0000    3 OP_CONSTANT         1 '<fn sum>'
-0002    | OP_DEFINE_GLOBAL    0 'sum'
-0004    5 OP_CONSTANT         2 '4'
-0006    | OP_GET_GLOBAL       3 'sum'
-0008    | OP_CONSTANT         4 '5'
-0010    | OP_CONSTANT         5 '6'
-0012    | OP_CONSTANT         6 '7'
-0014    | OP_CALL             3
-0016    | OP_ADD
-0017    | OP_PRINT
-0018    6 OP_NIL
-0019    | OP_RETURN
-22
+$ python3 main.py fib.lox
+75025
+elapsed seconds:
+19.4062
 ```
