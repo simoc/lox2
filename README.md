@@ -58,7 +58,9 @@ begin
 3
 4
 end
+```
 
+```
 $ cat fib.lox
 fun fib(n) {
  if (n < 2) return n;
