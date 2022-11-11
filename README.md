@@ -10,7 +10,8 @@ Currently, Chapters 14-29 are implemented.
 Chapter 30 is not implemented, because these optimizations
 are specific to the C language.
 
-Hash Tables for Chapter 20 are also not implemented and
+Hash Tables for Chapter 20 and Garbage Collection
+for Chapter 26 are also not implemented and
 Python dictionaries are used instead.
 
 ## Usage
