@@ -206,6 +206,13 @@ class VM:
 				self.pop()
 				self.push(value)
 
+			if instruction == OpCode.OP_GET_SUPER:
+				name = self.readString()
+				superclass = self.pop().AS_OBJ()
+
+				if not self.bindMethod(superclass, name):
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+
 			if instruction == OpCode.OP_EQUAL:
 				b = self.pop()
 				a = self.pop()
@@ -301,6 +308,14 @@ class VM:
 				method = self.readString()
 				argCount = self.readByte()
 				if not self.invoke(method, argCount):
+					return InterpretResult.INTERPRET_RUNTIME_ERROR
+				frame = self.frames[-1]
+
+			if instruction == OpCode.OP_SUPER_INVOKE:
+				method = self.readString()
+				argCount = self.readByte()
+				superclass = self.pop().AS_OBJ()
+				if not self.invokeFromClass(superclass, method, argCount):
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				frame = self.frames[-1]
 
