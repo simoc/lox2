@@ -428,7 +428,7 @@ class VM:
 				frame = self.frames[-1]
 				frame.setSlot(-(argCount + 1), Value.OBJ_VAL(bound.receiver))
 				return self.call(bound.method, argCount)
-			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLASS:
+			elif callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLASS:
 				klass = callee.AS_OBJ()
 				frame = self.frames[-1]
 				frame.setSlot(-(argCount + 1), Value.OBJ_VAL(ObjInstance(klass)))
@@ -439,9 +439,9 @@ class VM:
 					self.runtimeError("Expected 0 arguments but got {0}.".format(argCount))
 					return False
 				return True
-			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLOSURE:
+			elif callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLOSURE:
 				return self.call(callee.AS_OBJ(), argCount)
-			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_NATIVE:
+			elif callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_NATIVE:
 				native = callee.AS_OBJ().AS_NATIVE()
 				result = native(argCount, self.stack[-argCount:])
 				i = argCount + 1
