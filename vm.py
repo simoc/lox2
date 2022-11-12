@@ -126,27 +126,27 @@ class VM:
 				constant = self.readConstant()
 				self.push(constant)
 
-			if instruction == OpCode.OP_NIL:
+			elif instruction == OpCode.OP_NIL:
 				self.push(Value.NIL_VAL())
 
-			if instruction == OpCode.OP_TRUE:
+			elif instruction == OpCode.OP_TRUE:
 				self.push(Value.BOOL_VAL(True))
 
-			if instruction == OpCode.OP_FALSE:
+			elif instruction == OpCode.OP_FALSE:
 				self.push(Value.BOOL_VAL(False))
 
-			if instruction == OpCode.OP_POP:
+			elif instruction == OpCode.OP_POP:
 				self.pop()
 
-			if instruction == OpCode.OP_GET_LOCAL:
+			elif instruction == OpCode.OP_GET_LOCAL:
 				slot = self.readByte()
 				self.push(frame.getSlot(slot))
 
-			if instruction == OpCode.OP_SET_LOCAL:
+			elif instruction == OpCode.OP_SET_LOCAL:
 				slot = self.readByte()
 				frame.setSlot(slot, self.peek(0))
 
-			if instruction == OpCode.OP_GET_GLOBAL:
+			elif instruction == OpCode.OP_GET_GLOBAL:
 				constant = self.readConstant()
 				name = constant.AS_OBJ()
 				value = self.globals.get(name)
@@ -155,13 +155,13 @@ class VM:
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				self.push(value)
 
-			if instruction == OpCode.OP_DEFINE_GLOBAL:
+			elif instruction == OpCode.OP_DEFINE_GLOBAL:
 				constant = self.readConstant()
 				name = constant.AS_OBJ()
 				self.globals.set(name, self.peek(0))
 				self.pop()
 
-			if instruction == OpCode.OP_SET_GLOBAL:
+			elif instruction == OpCode.OP_SET_GLOBAL:
 				constant = self.readConstant()
 				name = constant.AS_OBJ()
 				if self.globals.set(name, self.peek(0)):
@@ -169,17 +169,17 @@ class VM:
 					self.runtimeError("Undefined variable '{0}'".format(name.AS_STRING()))
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 
-			if instruction == OpCode.OP_GET_UPVALUE:
+			elif instruction == OpCode.OP_GET_UPVALUE:
 				slot = self.readByte()
 				frame = self.frames[-1]
 				self.push(frame.closure.upvalues[slot].location)
 
-			if instruction == OpCode.OP_SET_UPVALUE:
+			elif instruction == OpCode.OP_SET_UPVALUE:
 				slot = self.readByte()
 				frame = self.frames[-1]
 				frame.closure.upvalues[slot].location = self.peek(0)
 
-			if instruction == OpCode.OP_GET_PROPERTY:
+			elif instruction == OpCode.OP_GET_PROPERTY:
 				if self.peek(0).AS_OBJ().OBJ_TYPE() != ObjType.OBJ_INSTANCE:
 					self.runtimeError("Only instances have properties.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
@@ -193,7 +193,7 @@ class VM:
 				elif not self.bindMethod(instance.klass, name):
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 
-			if instruction == OpCode.OP_SET_PROPERTY:
+			elif instruction == OpCode.OP_SET_PROPERTY:
 				if self.peek(1).AS_OBJ().OBJ_TYPE() != ObjType.OBJ_INSTANCE:
 					self.runtimeError("Only instances have fields.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
@@ -206,20 +206,20 @@ class VM:
 				self.pop()
 				self.push(value)
 
-			if instruction == OpCode.OP_GET_SUPER:
+			elif instruction == OpCode.OP_GET_SUPER:
 				name = self.readString()
 				superclass = self.pop().AS_OBJ()
 
 				if not self.bindMethod(superclass, name):
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 
-			if instruction == OpCode.OP_EQUAL:
+			elif instruction == OpCode.OP_EQUAL:
 				b = self.pop()
 				a = self.pop()
 				eq = Value.valuesEqual(a, b)
 				self.push(Value.BOOL_VAL(eq))
 
-			if instruction == OpCode.OP_GREATER:
+			elif instruction == OpCode.OP_GREATER:
 				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
@@ -227,7 +227,7 @@ class VM:
 				a = self.pop().AS_NUMBER()
 				self.push(Value.BOOL_VAL(a > b))
 
-			if instruction == OpCode.OP_LESS:
+			elif instruction == OpCode.OP_LESS:
 				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
@@ -235,7 +235,7 @@ class VM:
 				a = self.pop().AS_NUMBER()
 				self.push(Value.BOOL_VAL(a < b))
 
-			if instruction == OpCode.OP_ADD:
+			elif instruction == OpCode.OP_ADD:
 				if self.checkStringBinaryOperands():
 					self.concatenate()
 				elif self.checkNumberBinaryOperands():
@@ -246,7 +246,7 @@ class VM:
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 
-			if instruction == OpCode.OP_SUBTRACT:
+			elif instruction == OpCode.OP_SUBTRACT:
 				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
@@ -254,7 +254,7 @@ class VM:
 				a = self.pop().AS_NUMBER()
 				self.push(Value.NUMBER_VAL(a - b))
 
-			if instruction == OpCode.OP_MULTIPLY:
+			elif instruction == OpCode.OP_MULTIPLY:
 				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
@@ -262,7 +262,7 @@ class VM:
 				a = self.pop().AS_NUMBER()
 				self.push(Value.NUMBER_VAL(a * b))
 
-			if instruction == OpCode.OP_DIVIDE:
+			elif instruction == OpCode.OP_DIVIDE:
 				if not self.checkNumberBinaryOperands():
 					self.runtimeError("Operands must be numbers.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
@@ -270,48 +270,48 @@ class VM:
 				a = self.pop().AS_NUMBER()
 				self.push(Value.NUMBER_VAL(a / b))
 
-			if instruction == OpCode.OP_NOT:
+			elif instruction == OpCode.OP_NOT:
 				n = self.pop()
 				self.push(Value.BOOL_VAL(self.isFalsey(n)))
 
-			if instruction == OpCode.OP_NEGATE:
+			elif instruction == OpCode.OP_NEGATE:
 				if not self.peek(0).IS_NUMBER():
 					self.runtimeError("Operand must be a number.")
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				n = self.pop().AS_NUMBER()
 				self.push(Value.NUMBER_VAL(-n))
 
-			if instruction == OpCode.OP_PRINT:
+			elif instruction == OpCode.OP_PRINT:
 				frame.closure.AS_CLOSURE().chunk.printValue(self.pop())
 				print()
 
-			if instruction == OpCode.OP_JUMP_IF_FALSE:
+			elif instruction == OpCode.OP_JUMP_IF_FALSE:
 				offset = self.readShort()
 				if (self.isFalsey(self.peek(0))):
 					frame.ip += offset
 
-			if instruction == OpCode.OP_JUMP:
+			elif instruction == OpCode.OP_JUMP:
 				offset = self.readShort()
 				frame.ip += offset
 
-			if instruction == OpCode.OP_LOOP:
+			elif instruction == OpCode.OP_LOOP:
 				offset = self.readShort()
 				frame.ip -= offset
 
-			if instruction == OpCode.OP_CALL:
+			elif instruction == OpCode.OP_CALL:
 				argCount = self.readByte()
 				if not self.callValue(self.peek(argCount), argCount):
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				frame = self.frames[-1]
 
-			if instruction == OpCode.OP_INVOKE:
+			elif instruction == OpCode.OP_INVOKE:
 				method = self.readString()
 				argCount = self.readByte()
 				if not self.invoke(method, argCount):
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				frame = self.frames[-1]
 
-			if instruction == OpCode.OP_SUPER_INVOKE:
+			elif instruction == OpCode.OP_SUPER_INVOKE:
 				method = self.readString()
 				argCount = self.readByte()
 				superclass = self.pop().AS_OBJ()
@@ -319,7 +319,7 @@ class VM:
 					return InterpretResult.INTERPRET_RUNTIME_ERROR
 				frame = self.frames[-1]
 
-			if instruction == OpCode.OP_CLOSURE:
+			elif instruction == OpCode.OP_CLOSURE:
 				constant = self.readConstant()
 				function = constant.AS_OBJ()
 				closure = ObjClosure(function)
@@ -334,11 +334,11 @@ class VM:
 						closure.upvalues[i] = self.frames[-1].closure.upvalues[index]
 					i += 1
 
-			if instruction == OpCode.OP_CLOSE_UPVALUE:
+			elif instruction == OpCode.OP_CLOSE_UPVALUE:
 				self.closeUpvalues(0)
 				self.pop()
 
-			if instruction == OpCode.OP_RETURN:
+			elif instruction == OpCode.OP_RETURN:
 				result = self.pop()
 				self.closeUpvalues(0)
 				firstSlotInStack = self.frames[-1].firstSlotInStack
@@ -355,11 +355,11 @@ class VM:
 				self.push(result)
 				frame = self.frames[-1]
 
-			if instruction == OpCode.OP_CLASS:
+			elif instruction == OpCode.OP_CLASS:
 				name = self.readString()
 				self.push(Value.OBJ_VAL(ObjClass(name)))
 
-			if instruction == OpCode.OP_INHERIT:
+			elif instruction == OpCode.OP_INHERIT:
 				superclass = self.peek(1).AS_OBJ()
 
 				if superclass.OBJ_TYPE() != ObjType.OBJ_CLASS:
@@ -370,7 +370,7 @@ class VM:
 				subclass.methods.addAll(superclass.methods)
 				self.pop() # Subclass.
 
-			if instruction == OpCode.OP_METHOD:
+			elif instruction == OpCode.OP_METHOD:
 				name = self.readString()
 				self.defineMethod(name)
 
