@@ -318,6 +318,17 @@ class Compiler:
 		token.start = text
 		return token
 
+	def super_(self, canAssign):
+		if self.currentClass == None:
+			self.error("Can't use 'super' outside of a class.")
+
+		self.consume(TokenType.TOKEN_DOT, "Expect '.' after 'super'.")
+		self.consume(TokenType.TOKEN_IDENTIFIER, "Expect superclass method name.")
+		name = self.identifierConstant(self.parser.previous)
+		self.namedVariable(self.syntheticToken("this"), False)
+		self.namedVariable(self.syntheticToken("super"), False)
+		self.emitBytes(OpCode.OP_GET_SUPER, name)
+
 	def this_(self, canAssign):
 		if self.currentClass == None:
 			self.error("Can't use 'this' outside of a class.")
@@ -374,7 +385,7 @@ class Compiler:
 			TokenType.TOKEN_OR:             ParseRule(None,     self.or_,   Precedence.PREC_OR),
 			TokenType.TOKEN_PRINT:          ParseRule(None,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_RETURN:         ParseRule(None,     None,   Precedence.PREC_NONE),
-			TokenType.TOKEN_SUPER:          ParseRule(None,     None,   Precedence.PREC_NONE),
+			TokenType.TOKEN_SUPER:          ParseRule(self.super_,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_THIS:           ParseRule(self.this_,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_TRUE:           ParseRule(self.literal,     None,   Precedence.PREC_NONE),
 			TokenType.TOKEN_VAR:            ParseRule(None,     None,   Precedence.PREC_NONE),
