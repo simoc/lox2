@@ -16,10 +16,19 @@ class CallFrame:
 		self.firstSlotInStack = 0
 
 	def getSlot(self, index):
-		return self.stack[self.firstSlotInStack + index]
+		i = self.firstSlotInStack + index
+		if i >= 0:
+			return self.stack[i]
+		else:
+			print("Stack index {0} out of bounds".format(i), file=sys.stderr)
+			return None
 
 	def setSlot(self, index, value):
-		self.stack[self.firstSlotInStack + index] = value
+		i = self.firstSlotInStack + index
+		if i >= 0:
+			self.stack[i] = value
+		else:
+			print("Stack index {0} out of bounds".format(i), file=sys.stderr)
 
 class InterpretResult(IntEnum):
 	"""Possible results of interpreting chunk of bytecode"""
