@@ -435,12 +435,12 @@ class VM:
 			if callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_BOUND_METHOD:
 				bound = callee.AS_OBJ()
 				frame = self.frames[-1]
-				frame.setSlot(-(argCount + 1), Value.OBJ_VAL(bound.receiver))
+				frame.setSlot(-(argCount - 1), Value.OBJ_VAL(bound.receiver))
 				return self.call(bound.method, argCount)
 			elif callee.AS_OBJ().OBJ_TYPE() == ObjType.OBJ_CLASS:
 				klass = callee.AS_OBJ()
 				frame = self.frames[-1]
-				frame.setSlot(-(argCount + 1), Value.OBJ_VAL(ObjInstance(klass)))
+				frame.setSlot(-(argCount - 1), Value.OBJ_VAL(ObjInstance(klass)))
 				initializer = klass.methods.get(ObjString(self.initString))
 				if initializer != None:
 					return self.call(initializer, argCount)
