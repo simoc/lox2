@@ -78,3 +78,31 @@ $ python3 main.py fib.lox
 elapsed seconds:
 19.4062
 ```
+
+```
+$ cat counter.lox
+class Counter
+{
+  init(n)
+  {
+    this.m_n = n;
+  }
+
+  getNext()
+  {
+    var n = this.m_n;
+    this.m_n = this.m_n + 1;
+    return n;
+  }
+}
+
+var counter = Counter(1000);
+print counter.getNext();
+print counter.getNext();
+print counter.getNext();
+
+$ python3 main.py counter.lox
+1000
+1001
+1002
+```
